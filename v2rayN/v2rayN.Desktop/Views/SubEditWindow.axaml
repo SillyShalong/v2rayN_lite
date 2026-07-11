@@ -121,20 +121,6 @@
                         Margin="{StaticResource Margin4}"
                         HorizontalAlignment="Center"
                         DockPanel.Dock="Left" />
-
-                    <TextBox
-                        x:Name="txtAutoUpdateInterval"
-                        Width="100"
-                        Margin="{StaticResource Margin4}"
-                        VerticalAlignment="Center"
-                        DockPanel.Dock="Right"
-                        Watermark="{x:Static resx:ResUI.SubUrlTips}" />
-
-                    <TextBlock
-                        Margin="{StaticResource Margin4}"
-                        HorizontalAlignment="Center"
-                        VerticalAlignment="Center"
-                        Text="{x:Static resx:ResUI.LvAutoUpdateInterval}" />
                 </DockPanel>
 
                 <TextBlock

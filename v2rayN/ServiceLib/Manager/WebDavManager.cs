@@ -29,6 +29,10 @@ public sealed class WebDavManager
             {
                 throw new ArgumentException("webdav parameter error or null");
             }
+            if (!ExternalConnectionGuard.IsUrlAllowed(_config.WebDavItem.Url))
+            {
+                throw new InvalidOperationException(ExternalConnectionGuard.BlockedMessage);
+            }
             if (_client != null)
             {
                 _client?.Dispose();

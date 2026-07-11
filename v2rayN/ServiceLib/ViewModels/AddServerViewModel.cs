@@ -477,6 +477,10 @@ public class AddServerViewModel : MyReactiveObject
 
     private async Task FetchCert()
     {
+        UpdateCertTip(ExternalConnectionGuard.BlockedMessage);
+        await Task.CompletedTask;
+        return;
+
         if (SelectedSource.StreamSecurity != Global.StreamSecurity)
         {
             return;
@@ -503,6 +507,10 @@ public class AddServerViewModel : MyReactiveObject
 
     private async Task FetchCertChain()
     {
+        UpdateCertTip(ExternalConnectionGuard.BlockedMessage);
+        await Task.CompletedTask;
+        return;
+
         if (SelectedSource.StreamSecurity != Global.StreamSecurity)
         {
             return;

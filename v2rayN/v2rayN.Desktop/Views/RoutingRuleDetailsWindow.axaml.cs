@@ -90,7 +90,7 @@ public partial class RoutingRuleDetailsWindow : WindowBase<RoutingRuleDetailsVie
 
     private void linkRuleobjectDoc_Click(object? sender, RoutedEventArgs e)
     {
-        ProcUtils.ProcessStart("https://xtls.github.io/config/routing.html#ruleobject");
+        NoticeManager.Instance.Enqueue(ExternalConnectionGuard.BlockedMessage);
     }
 
     private async void BtnSelectProfile_Click(object? sender, RoutedEventArgs e)

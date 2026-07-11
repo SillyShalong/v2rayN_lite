@@ -95,6 +95,7 @@ public static class ConfigHandler
             EnableLegacyProtect = false,
         };
         config.GuiItem ??= new();
+        config.GuiItem.AutoUpdateInterval = 0;
         config.MsgUIItem ??= new();
 
         config.UiItem ??= new();
@@ -109,6 +110,10 @@ public static class ConfigHandler
         }
 
         config.ConstItem ??= new ConstItem();
+        config.ConstItem.SubConvertUrl = string.Empty;
+        config.ConstItem.GeoSourceUrl = string.Empty;
+        config.ConstItem.SrsSourceUrl = string.Empty;
+        config.ConstItem.RouteRulesTemplateSourceUrl = string.Empty;
 
         config.SimpleDNSItem ??= InitBuiltinSimpleDNS();
         config.SimpleDNSItem.GlobalFakeIp ??= true;
@@ -137,6 +142,7 @@ public static class ConfigHandler
         {
             config.SpeedTestItem.UdpTestTarget = Global.UdpTestTargets.First();
         }
+        config.SpeedTestItem.IPAPIUrl = string.Empty;
 
         config.Mux4RayItem ??= new()
         {
@@ -160,7 +166,15 @@ public static class ConfigHandler
         config.ClashUIItem.ConnectionsColumnItem ??= [];
         config.SystemProxyItem ??= new();
         config.WebDavItem ??= new();
-        config.CheckUpdateItem ??= new();  
+        config.WebDavItem.Url = string.Empty;
+        config.WebDavItem.UserName = string.Empty;
+        config.WebDavItem.Password = string.Empty;
+        config.WebDavItem.DirName = string.Empty;
+        config.CheckUpdateItem ??= new();
+        if (config.CheckUpdateItem.SelectedCoreTypes == null || config.CheckUpdateItem.SelectedCoreTypes.Count == 0)
+        {
+            config.CheckUpdateItem.SelectedCoreTypes = [ECoreType.Xray.ToString()];
+        }
         config.Fragment4RayItem ??= new()
         {
             Packets = "tlshello",
@@ -2007,7 +2021,7 @@ public static class ConfigHandler
             item.Url = subItem.Url;
             item.MoreUrl = subItem.MoreUrl;
             item.Enabled = subItem.Enabled;
-            item.AutoUpdateInterval = subItem.AutoUpdateInterval;
+            item.AutoUpdateInterval = 0;
             item.UserAgent = subItem.UserAgent;
             item.Sort = subItem.Sort;
             item.Filter = subItem.Filter;

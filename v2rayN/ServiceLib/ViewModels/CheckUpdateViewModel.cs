@@ -21,14 +21,14 @@ public class CheckUpdateViewModel : MyReactiveObject
         CheckUpdateCmd.ThrownExceptions.Subscribe(ex =>
         {
             Logging.SaveLog(_tag, ex);
-            _ = UpdateView(_v2rayN, ex.Message);
+            _ = UpdateView(ECoreType.Xray, ex.Message);
         });
 
         CheckOnlyCmd = ReactiveCommand.CreateFromTask(CheckOnly);
         CheckOnlyCmd.ThrownExceptions.Subscribe(ex =>
         {
             Logging.SaveLog(_tag, ex);
-            _ = UpdateView(_v2rayN, ex.Message);
+            _ = UpdateView(ECoreType.Xray, ex.Message);
         });
 
         EnableCheckPreReleaseUpdate = _config.CheckUpdateItem.CheckPreReleaseUpdate;
@@ -44,6 +44,7 @@ public class CheckUpdateViewModel : MyReactiveObject
     private void RefreshCheckUpdateItems()
     {
         var models = CoreInfoManager.Instance.GetCheckUpdateCoreTypes()
+                        .Where(t => t == ECoreType.Xray)
                         .Select(t => GetCheckUpdateModel(t))
                         .ToList();
 
@@ -69,7 +70,7 @@ public class CheckUpdateViewModel : MyReactiveObject
         AppManager.Instance.LastCheckUpdateResults.TryGetValue(coreType, out var lastResult);
         return new()
         {
-            IsSelected = _config.CheckUpdateItem.SelectedCoreTypes?.Contains(coreType.ToString()) ?? true,
+            IsSelected = _config.CheckUpdateItem.SelectedCoreTypes?.Contains(coreType.ToString()) ?? coreType == ECoreType.Xray,
             CoreType = coreType,
             IsGeoFile = false,
             Remarks = lastResult ?? ResUI.menuCheckUpdate,

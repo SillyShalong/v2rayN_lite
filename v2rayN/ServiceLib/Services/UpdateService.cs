@@ -9,6 +9,9 @@ public class UpdateService(Config config, Func<bool, string, Task> updateFunc)
 
     public async Task CheckUpdateGuiN(bool preRelease)
     {
+        await UpdateFunc(false, ExternalConnectionGuard.BlockedMessage);
+        return;
+
         var url = string.Empty;
         var fileName = string.Empty;
 
@@ -49,6 +52,12 @@ public class UpdateService(Config config, Func<bool, string, Task> updateFunc)
 
     public async Task CheckUpdateCore(ECoreType type, bool preRelease)
     {
+        if (!IsAllowedManualCoreUpdate(type))
+        {
+            await UpdateFunc(false, ExternalConnectionGuard.XrayCoreUpdateOnlyMessage);
+            return;
+        }
+
         var url = string.Empty;
         var fileName = string.Empty;
 
@@ -102,6 +111,12 @@ public class UpdateService(Config config, Func<bool, string, Task> updateFunc)
 
     public async Task<UpdateResult> CheckHasUpdateOnly(ECoreType type, bool preRelease)
     {
+        if (!IsAllowedManualCoreUpdate(type))
+        {
+            await UpdateFunc(false, ExternalConnectionGuard.XrayCoreUpdateOnlyMessage);
+            return new UpdateResult(false, ExternalConnectionGuard.XrayCoreUpdateOnlyMessage);
+        }
+
         if (!CoreInfoManager.Instance.IsCheckUpdateSupported(type))
         {
             return new UpdateResult(false, ResUI.MsgNotSupport);
@@ -117,6 +132,10 @@ public class UpdateService(Config config, Func<bool, string, Task> updateFunc)
         var msgs = new List<string>();
         foreach (var type in CoreInfoManager.Instance.GetCheckUpdateCoreTypes())
         {
+            if (!IsAllowedManualCoreUpdate(type))
+            {
+                continue;
+            }
             if (!(_config.CheckUpdateItem.SelectedCoreTypes?.Contains(type.ToString()) ?? true))
             {
                 continue;
@@ -517,7 +536,10 @@ public class UpdateService(Config config, Func<bool, string, Task> updateFunc)
     {
         var tmpFileName = Utils.GetTempPath(Utils.GetGuid());
 
-        DownloadService downloadHandle = new();
+        DownloadService downloadHandle = new()
+        {
+            ExternalUrlValidator = ExternalConnectionGuard.IsGeoUpdateUrlAllowed
+        };
         downloadHandle.UpdateCompleted += (sender2, args) =>
         {
             if (args.Success)
@@ -557,5 +579,10 @@ public class UpdateService(Config config, Func<bool, string, Task> updateFunc)
     private async Task UpdateFunc(bool notify, string msg)
     {
         await _updateFunc?.Invoke(notify, msg);
+    }
+
+    private static bool IsAllowedManualCoreUpdate(ECoreType type)
+    {
+        return type == ECoreType.Xray;
     }
 }

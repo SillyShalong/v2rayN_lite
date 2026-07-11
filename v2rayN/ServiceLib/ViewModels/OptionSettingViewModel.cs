@@ -198,7 +198,7 @@ public class OptionSettingViewModel : MyReactiveObject
         MacOSShowInDock = _config.UiItem.MacOSShowInDock;
         EnableDragDropSort = _config.UiItem.EnableDragDropSort;
         DoubleClick2Activate = _config.UiItem.DoubleClick2Activate;
-        AutoUpdateInterval = _config.GuiItem.AutoUpdateInterval;
+        AutoUpdateInterval = 0;
         TrayMenuServersLimit = _config.GuiItem.TrayMenuServersLimit;
         CurrentFontFamily = _config.UiItem.CurrentFontFamily;
         SpeedTestTimeout = _config.SpeedTestItem.SpeedTestTimeout;
@@ -207,12 +207,12 @@ public class OptionSettingViewModel : MyReactiveObject
         SpeedPingTestUrl = _config.SpeedTestItem.SpeedPingTestUrl;
         UdpTestTarget = _config.SpeedTestItem.UdpTestTarget;
         EnableHWA = _config.GuiItem.EnableHWA;
-        SubConvertUrl = _config.ConstItem.SubConvertUrl;
+        SubConvertUrl = string.Empty;
         MainGirdOrientation = (int)_config.UiItem.MainGirdOrientation;
-        GeoFileSourceUrl = _config.ConstItem.GeoSourceUrl;
-        SrsFileSourceUrl = _config.ConstItem.SrsSourceUrl;
-        RoutingRulesSourceUrl = _config.ConstItem.RouteRulesTemplateSourceUrl;
-        IPAPIUrl = _config.SpeedTestItem.IPAPIUrl;
+        GeoFileSourceUrl = string.Empty;
+        SrsFileSourceUrl = string.Empty;
+        RoutingRulesSourceUrl = string.Empty;
+        IPAPIUrl = string.Empty;
 
         #endregion UI
 
@@ -385,7 +385,7 @@ public class OptionSettingViewModel : MyReactiveObject
         _config.UiItem.AutoHideStartup = AutoHideStartup;
         _config.UiItem.Hide2TrayWhenClose = Hide2TrayWhenClose;
         _config.UiItem.MacOSShowInDock = MacOSShowInDock;
-        _config.GuiItem.AutoUpdateInterval = AutoUpdateInterval;
+        _config.GuiItem.AutoUpdateInterval = 0;
         _config.UiItem.EnableDragDropSort = EnableDragDropSort;
         _config.UiItem.DoubleClick2Activate = DoubleClick2Activate;
         _config.GuiItem.TrayMenuServersLimit = TrayMenuServersLimit;
@@ -396,12 +396,12 @@ public class OptionSettingViewModel : MyReactiveObject
         _config.SpeedTestItem.SpeedPingTestUrl = SpeedPingTestUrl;
         _config.SpeedTestItem.UdpTestTarget = UdpTestTarget;
         _config.GuiItem.EnableHWA = EnableHWA;
-        _config.ConstItem.SubConvertUrl = SubConvertUrl;
+        _config.ConstItem.SubConvertUrl = string.Empty;
         _config.UiItem.MainGirdOrientation = (EGirdOrientation)MainGirdOrientation;
-        _config.ConstItem.GeoSourceUrl = GeoFileSourceUrl;
-        _config.ConstItem.SrsSourceUrl = SrsFileSourceUrl;
-        _config.ConstItem.RouteRulesTemplateSourceUrl = RoutingRulesSourceUrl;
-        _config.SpeedTestItem.IPAPIUrl = IPAPIUrl;
+        _config.ConstItem.GeoSourceUrl = string.Empty;
+        _config.ConstItem.SrsSourceUrl = string.Empty;
+        _config.ConstItem.RouteRulesTemplateSourceUrl = string.Empty;
+        _config.SpeedTestItem.IPAPIUrl = string.Empty;
 
         //systemProxy
         _config.SystemProxyItem.SystemProxyExceptions = SystemProxyExceptions;

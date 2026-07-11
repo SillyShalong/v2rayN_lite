@@ -1,0 +1,18 @@
+<Window
+    x:Class="v2rayN.Desktop.Views.CheckUpdateWindow"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:resx="clr-namespace:ServiceLib.Resx;assembly=ServiceLib"
+    xmlns:view="using:v2rayN.Desktop.Views"
+    Title="{x:Static resx:ResUI.menuCheckUpdate}"
+    Width="720"
+    Height="520"
+    ShowInTaskbar="False"
+    WindowStartupLocation="CenterScreen"
+    mc:Ignorable="d">
+    <Grid>
+        <view:CheckUpdateView />
+    </Grid>
+</Window>

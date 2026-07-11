@@ -43,6 +43,7 @@ public class MainWindowViewModel : MyReactiveObject
     public ReactiveCommand<Unit, Unit> GlobalHotkeySettingCmd { get; }
     public ReactiveCommand<Unit, Unit> RebootAsAdminCmd { get; }
     public ReactiveCommand<Unit, Unit> ClearServerStatisticsCmd { get; }
+    public ReactiveCommand<Unit, Unit> CheckUpdateCmd { get; }
     public ReactiveCommand<Unit, Unit> OpenTheFileLocationCmd { get; }
 
     //Presets
@@ -203,6 +204,10 @@ public class MainWindowViewModel : MyReactiveObject
         ClearServerStatisticsCmd = ReactiveCommand.CreateFromTask(async () =>
         {
             await ClearServerStatistics();
+        });
+        CheckUpdateCmd = ReactiveCommand.CreateFromTask(async () =>
+        {
+            await CheckUpdateAsync();
         });
         OpenTheFileLocationCmd = ReactiveCommand.CreateFromTask(async () =>
         {
@@ -526,6 +531,11 @@ public class MainWindowViewModel : MyReactiveObject
         await RefreshServers();
     }
 
+    private async Task CheckUpdateAsync()
+    {
+        await _updateView?.Invoke(EViewAction.CheckUpdateWindow, null);
+    }
+
     private async Task OpenTheFileLocation()
     {
         var path = Utils.StartupPath();
@@ -582,7 +592,6 @@ public class MainWindowViewModel : MyReactiveObject
                 await SysProxyHandler.UpdateSysProxy(_config, false);
                 await Task.Delay(1000);
             });
-            AppEvents.TestServerRequested.Publish();
 
             var showClashUI = AppManager.Instance.IsRunningCore(ECoreType.sing_box);
             if (showClashUI)
@@ -630,12 +639,17 @@ public class MainWindowViewModel : MyReactiveObject
 
     public async Task ApplyRegionalPreset(EPresetType type)
     {
+        if (type != EPresetType.Default)
+        {
+            NoticeManager.Instance.Enqueue(ExternalConnectionGuard.BlockedMessage);
+            return;
+        }
+
         await ConfigHandler.ApplyRegionalPreset(_config, type);
         await ConfigHandler.InitRouting(_config);
         AppEvents.RoutingsMenuRefreshRequested.Publish();
 
         await ConfigHandler.SaveConfig(_config);
-        await new UpdateService(_config, UpdateTaskHandler).UpdateGeoFileAll();
         await Reload();
     }
 

@@ -24,7 +24,7 @@ public class HttpClientHelper
 
     public async Task<string?> TryGetAsync(string url)
     {
-        if (url.IsNullOrEmpty())
+        if (!ExternalConnectionGuard.IsUrlAllowed(url))
         {
             return null;
         }
@@ -42,7 +42,7 @@ public class HttpClientHelper
 
     public async Task<string?> GetAsync(string url)
     {
-        if (url.IsNullOrEmpty())
+        if (!ExternalConnectionGuard.IsUrlAllowed(url))
         {
             return null;
         }
@@ -51,6 +51,11 @@ public class HttpClientHelper
 
     public async Task PutAsync(string url, Dictionary<string, string> headers)
     {
+        if (!ExternalConnectionGuard.IsUrlAllowed(url))
+        {
+            return;
+        }
+
         var jsonContent = JsonUtils.Serialize(headers);
         var content = new StringContent(jsonContent, Encoding.UTF8, MediaTypeNames.Application.Json);
 
@@ -59,6 +64,11 @@ public class HttpClientHelper
 
     public async Task PatchAsync(string url, Dictionary<string, string> headers)
     {
+        if (!ExternalConnectionGuard.IsUrlAllowed(url))
+        {
+            return;
+        }
+
         var myContent = JsonUtils.Serialize(headers);
         var buffer = Encoding.UTF8.GetBytes(myContent);
         var byteContent = new ByteArrayContent(buffer);
@@ -69,6 +79,11 @@ public class HttpClientHelper
 
     public async Task DeleteAsync(string url)
     {
+        if (!ExternalConnectionGuard.IsUrlAllowed(url))
+        {
+            return;
+        }
+
         await httpClient.DeleteAsync(url);
     }
 }

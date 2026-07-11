@@ -46,6 +46,9 @@ public class SubEditViewModel : MyReactiveObject
             }
         }
 
+        SelectedSource.AutoUpdateInterval = 0;
+        SelectedSource.ConvertTarget = string.Empty;
+
         if (await ConfigHandler.AddSubItem(_config, SelectedSource) == 0)
         {
             NoticeManager.Instance.Enqueue(ResUI.OperationSuccess);

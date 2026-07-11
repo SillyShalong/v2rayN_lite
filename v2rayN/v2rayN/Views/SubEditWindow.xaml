@@ -156,23 +156,6 @@
                         Margin="{StaticResource Margin4}"
                         HorizontalAlignment="Left"
                         DockPanel.Dock="Left" />
-
-                    <TextBox
-                        x:Name="txtAutoUpdateInterval"
-                        Width="100"
-                        Margin="{StaticResource Margin4}"
-                        VerticalAlignment="Center"
-                        materialDesign:HintAssist.Hint="{x:Static resx:ResUI.SubUrlTips}"
-                        AcceptsReturn="True"
-                        DockPanel.Dock="Right"
-                        Style="{StaticResource MyOutlinedTextBox}" />
-
-                    <TextBlock
-                        Margin="{StaticResource Margin4}"
-                        HorizontalAlignment="Center"
-                        VerticalAlignment="Center"
-                        Style="{StaticResource ToolbarTextBlock}"
-                        Text="{x:Static resx:ResUI.LvAutoUpdateInterval}" />
                 </DockPanel>
 
                 <TextBlock

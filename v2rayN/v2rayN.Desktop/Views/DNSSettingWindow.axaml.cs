@@ -86,12 +86,12 @@ public partial class DNSSettingWindow : WindowBase<DNSSettingViewModel>
 
     private void linkDnsObjectDoc_Click(object? sender, RoutedEventArgs e)
     {
-        ProcUtils.ProcessStart("https://xtls.github.io/config/dns.html#dnsobject");
+        NoticeManager.Instance.Enqueue(ExternalConnectionGuard.BlockedMessage);
     }
 
     private void linkDnsSingboxObjectDoc_Click(object? sender, RoutedEventArgs e)
     {
-        ProcUtils.ProcessStart("https://sing-box.sagernet.org/zh/configuration/dns/");
+        NoticeManager.Instance.Enqueue(ExternalConnectionGuard.BlockedMessage);
     }
 
     private void Window_Loaded(object? sender, RoutedEventArgs e)

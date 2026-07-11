@@ -14,6 +14,7 @@ public partial class OptionSettingWindow
         _config = AppManager.Instance.Config;
 
         ViewModel = new OptionSettingViewModel(UpdateViewHandler);
+        CollapseExternalRows();
 
         clbdestOverride.SelectionChanged += ClbdestOverride_SelectionChanged;
         btnBrowseCustomSystemProxyPacPath.Click += BtnBrowseCustomSystemProxyPacPath_Click;
@@ -102,7 +103,6 @@ public partial class OptionSettingWindow
             this.Bind(ViewModel, vm => vm.AutoHideStartup, v => v.togAutoHideStartup.IsChecked).DisposeWith(disposables);
             this.Bind(ViewModel, vm => vm.EnableDragDropSort, v => v.togEnableDragDropSort.IsChecked).DisposeWith(disposables);
             this.Bind(ViewModel, vm => vm.DoubleClick2Activate, v => v.togDoubleClick2Activate.IsChecked).DisposeWith(disposables);
-            this.Bind(ViewModel, vm => vm.AutoUpdateInterval, v => v.txtautoUpdateInterval.Text).DisposeWith(disposables);
             this.Bind(ViewModel, vm => vm.TrayMenuServersLimit, v => v.txttrayMenuServersLimit.Text).DisposeWith(disposables);
             this.Bind(ViewModel, vm => vm.CurrentFontFamily, v => v.cmbcurrentFontFamily.Text).DisposeWith(disposables);
             this.Bind(ViewModel, vm => vm.SpeedTestTimeout, v => v.cmbSpeedTestTimeout.Text).DisposeWith(disposables);
@@ -159,6 +159,20 @@ public partial class OptionSettingWindow
                 break;
         }
         return await Task.FromResult(true);
+    }
+
+    private void CollapseExternalRows()
+    {
+        if (cmbMixedConcurrencyCount.Parent is System.Windows.Controls.Grid grid)
+        {
+            foreach (var row in new[] { 16, 17, 18, 19, 20, 22, 23, 25, 26, 27 })
+            {
+                if (row < grid.RowDefinitions.Count)
+                {
+                    grid.RowDefinitions[row].Height = new GridLength(0);
+                }
+            }
+        }
     }
 
     private async Task InitSettingFont()

@@ -63,10 +63,6 @@
                         Header="{x:Static resx:ResUI.LvEnabled}" />
                     <DataGridTextColumn
                         Width="150"
-                        Binding="{Binding AutoUpdateInterval}"
-                        Header="{x:Static resx:ResUI.LvAutoUpdateInterval}" />
-                    <DataGridTextColumn
-                        Width="150"
                         Binding="{Binding UserAgent}"
                         Header="{x:Static resx:ResUI.LvUserAgent}" />
                     <DataGridTextColumn

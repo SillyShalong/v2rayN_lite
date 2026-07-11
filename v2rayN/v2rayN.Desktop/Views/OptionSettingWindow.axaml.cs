@@ -16,6 +16,7 @@ public partial class OptionSettingWindow : WindowBase<OptionSettingViewModel>
         _config = AppManager.Instance.Config;
 
         ViewModel = new OptionSettingViewModel(UpdateViewHandler);
+        CollapseExternalRows();
 
         clbdestOverride.SelectionChanged += ClbdestOverride_SelectionChanged;
         btnBrowseCustomSystemProxyPacPath.Click += BtnBrowseCustomSystemProxyPacPath_Click;
@@ -97,7 +98,6 @@ public partial class OptionSettingWindow : WindowBase<OptionSettingViewModel>
             this.Bind(ViewModel, vm => vm.Hide2TrayWhenClose, v => v.togHide2TrayWhenClose.IsChecked).DisposeWith(disposables);
             this.Bind(ViewModel, vm => vm.MacOSShowInDock, v => v.togMacOSShowInDock.IsChecked).DisposeWith(disposables);
             this.Bind(ViewModel, vm => vm.DoubleClick2Activate, v => v.togDoubleClick2Activate.IsChecked).DisposeWith(disposables);
-            this.Bind(ViewModel, vm => vm.AutoUpdateInterval, v => v.txtautoUpdateInterval.Text).DisposeWith(disposables);
             this.Bind(ViewModel, vm => vm.CurrentFontFamily, v => v.cmbcurrentFontFamily.Text).DisposeWith(disposables);
             this.Bind(ViewModel, vm => vm.SpeedTestTimeout, v => v.cmbSpeedTestTimeout.SelectedValue).DisposeWith(disposables);
             this.Bind(ViewModel, vm => vm.SpeedTestUrl, v => v.cmbSpeedTestUrl.Text).DisposeWith(disposables);
@@ -153,6 +153,20 @@ public partial class OptionSettingWindow : WindowBase<OptionSettingViewModel>
                 break;
         }
         return await Task.FromResult(true);
+    }
+
+    private void CollapseExternalRows()
+    {
+        if (cmbMixedConcurrencyCount.Parent is Grid grid)
+        {
+            foreach (var row in new[] { 16, 17, 18, 19, 20, 22, 23, 25, 26, 27 })
+            {
+                if (row < grid.RowDefinitions.Count)
+                {
+                    grid.RowDefinitions[row].Height = new GridLength(0);
+                }
+            }
+        }
     }
 
     private async Task InitSettingFont()

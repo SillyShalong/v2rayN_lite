@@ -17,6 +17,7 @@ public partial class SubEditWindow : WindowBase<SubEditViewModel>
         btnCancel.Click += (s, e) => Close();
 
         ViewModel = new SubEditViewModel(subItem, UpdateViewHandler);
+        CollapseExternalRows();
 
         cmbConvertTarget.ItemsSource = Global.SubConvertTargets;
 
@@ -26,7 +27,6 @@ public partial class SubEditWindow : WindowBase<SubEditViewModel>
             this.Bind(ViewModel, vm => vm.SelectedSource.Url, v => v.txtUrl.Text).DisposeWith(disposables);
             this.Bind(ViewModel, vm => vm.SelectedSource.MoreUrl, v => v.txtMoreUrl.Text).DisposeWith(disposables);
             this.Bind(ViewModel, vm => vm.SelectedSource.Enabled, v => v.togEnable.IsChecked).DisposeWith(disposables);
-            this.Bind(ViewModel, vm => vm.SelectedSource.AutoUpdateInterval, v => v.txtAutoUpdateInterval.Text).DisposeWith(disposables);
             this.Bind(ViewModel, vm => vm.SelectedSource.UserAgent, v => v.txtUserAgent.Text).DisposeWith(disposables);
             this.Bind(ViewModel, vm => vm.SelectedSource.Sort, v => v.txtSort.Text).DisposeWith(disposables);
             this.Bind(ViewModel, vm => vm.SelectedSource.Filter, v => v.txtFilter.Text).DisposeWith(disposables);
@@ -49,6 +49,14 @@ public partial class SubEditWindow : WindowBase<SubEditViewModel>
                 break;
         }
         return await Task.FromResult(true);
+    }
+
+    private void CollapseExternalRows()
+    {
+        if (cmbConvertTarget.Parent is Grid grid && grid.RowDefinitions.Count > 6)
+        {
+            grid.RowDefinitions[6].Height = new GridLength(0);
+        }
     }
 
     private void Window_Loaded(object? sender, RoutedEventArgs e)

@@ -82,7 +82,10 @@ public static class SubscriptionHandler
 
     private static DownloadService CreateDownloadHandler(string hashCode, Func<bool, string, Task> updateFunc)
     {
-        var downloadHandle = new DownloadService();
+        var downloadHandle = new DownloadService()
+        {
+            ExternalUrlValidator = ExternalConnectionGuard.IsSubscriptionUrlAllowed
+        };
         downloadHandle.Error += (sender2, args) =>
         {
             updateFunc?.Invoke(false, $"{hashCode}{args.GetException().Message}");

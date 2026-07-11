@@ -126,12 +126,12 @@ public partial class RoutingSettingWindow : WindowBase<RoutingSettingViewModel>
 
     private void linkdomainStrategy_Click(object? sender, RoutedEventArgs e)
     {
-        ProcUtils.ProcessStart("https://xtls.github.io/config/routing.html");
+        NoticeManager.Instance.Enqueue(ExternalConnectionGuard.BlockedMessage);
     }
 
     private void linkdomainStrategy4Singbox_Click(object? sender, RoutedEventArgs e)
     {
-        ProcUtils.ProcessStart("https://sing-box.sagernet.org/zh/configuration/route/rule_action/#strategy");
+        NoticeManager.Instance.Enqueue(ExternalConnectionGuard.BlockedMessage);
     }
 
     private void Window_Loaded(object? sender, RoutedEventArgs e)

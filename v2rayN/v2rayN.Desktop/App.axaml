@@ -65,8 +65,6 @@
                             ToggleType="Radio" />
                         <NativeMenuItemSeparator />
                         <NativeMenuItem Click="MenuAddServerViaClipboardClick" Header="{x:Static resx:ResUI.menuAddServerViaClipboard}" />
-                        <NativeMenuItem Command="{Binding SubUpdateCmd}" Header="{x:Static resx:ResUI.menuSubUpdate}" />
-                        <NativeMenuItem Command="{Binding SubUpdateViaProxyCmd}" Header="{x:Static resx:ResUI.menuSubUpdateViaProxy}" />
                         <NativeMenuItemSeparator />
                         <NativeMenuItem Click="MenuExit_Click" Header="{x:Static resx:ResUI.menuExit}" />
                     </NativeMenu>

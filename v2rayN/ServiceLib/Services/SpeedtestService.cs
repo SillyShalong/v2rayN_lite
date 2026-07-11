@@ -356,7 +356,6 @@ public class SpeedtestService(Config config, Func<SpeedTestResult, Task> updateF
     private async Task RunMixedTestAsync(List<ServerTestItem> selecteds, int concurrencyCount, bool blSpeedTest, string exitLoopKey)
     {
         using var concurrencySemaphore = new SemaphoreSlim(concurrencyCount);
-        var downloadHandle = new DownloadService();
         List<Task> tasks = [];
         foreach (var it in selecteds)
         {
@@ -381,7 +380,7 @@ public class SpeedtestService(Config config, Func<SpeedTestResult, Task> updateF
 
                     await Task.Delay(1000);
 
-                    var delay = await DoRealPing(it);
+                    await DoRealPing(it);
                     if (blSpeedTest)
                     {
                         if (ShouldStopTest(exitLoopKey))
@@ -390,14 +389,7 @@ public class SpeedtestService(Config config, Func<SpeedTestResult, Task> updateF
                             return;
                         }
 
-                        if (delay > 0)
-                        {
-                            await DoSpeedTest(downloadHandle, it);
-                        }
-                        else
-                        {
-                            await UpdateFunc(it.IndexId, "", ResUI.SpeedtestingSkip);
-                        }
+                        await DoSpeedTest(it);
                     }
                 }
                 catch (Exception ex)
@@ -420,12 +412,17 @@ public class SpeedtestService(Config config, Func<SpeedTestResult, Task> updateF
     private async Task<int> DoRealPing(ServerTestItem it)
     {
         var webProxy = new WebProxy($"socks5://{Global.Loopback}:{it.Port}");
-        var responseTime = await ConnectionHandler.GetRealPingTime(webProxy, 10);
+        var httpResponseTime = await ConnectionHandler.GetRealPingTime(webProxy, 10, it.Profile);
+        var responseTime = httpResponseTime;
+        if (responseTime <= 0)
+        {
+            responseTime = await GetTcpingTime(it.Profile.Address, it.Profile.Port);
+        }
 
         ProfileExManager.Instance.SetTestDelay(it.IndexId, responseTime);
         await UpdateFunc(it.IndexId, responseTime.ToString());
 
-        if (responseTime > 0)
+        if (httpResponseTime > 0)
         {
             var ipInfo = await ConnectionHandler.GetIPInfo(webProxy);
             var ipStr = ipInfo?.ToString() ?? Global.None;
@@ -439,23 +436,33 @@ public class SpeedtestService(Config config, Func<SpeedTestResult, Task> updateF
 
         return responseTime;
     }
-
-    private async Task DoSpeedTest(DownloadService downloadHandle, ServerTestItem it)
+    private async Task DoSpeedTest(ServerTestItem it)
     {
         await UpdateFunc(it.IndexId, "", ResUI.Speedtesting);
 
-        var webProxy = new WebProxy($"socks5://{Global.Loopback}:{it.Port}");
-        var url = _config.SpeedTestItem.SpeedTestUrl;
-        var timeout = _config.SpeedTestItem.SpeedTestTimeout;
-        await downloadHandle.DownloadDataAsync(url, webProxy, timeout, async (success, msg) =>
+        var downloadHandle = new DownloadService()
         {
-            decimal.TryParse(msg, out var dec);
-            if (dec > 0)
+            ExternalUrlValidator = url => ExternalConnectionGuard.IsSpeedTestUrlAllowed(url, it.Profile)
+        };
+        var webProxy = new WebProxy($"socks5://{Global.Loopback}:{it.Port}");
+        var timeout = _config.SpeedTestItem.SpeedTestTimeout;
+        foreach (var url in ExternalConnectionGuard.GetAllowedSpeedTestUrls())
+        {
+            var hasSpeed = await downloadHandle.DownloadDataAsync(url, webProxy, timeout, async (success, msg) =>
             {
-                ProfileExManager.Instance.SetTestSpeed(it.IndexId, dec);
+                decimal.TryParse(msg, out var dec);
+                if (dec > 0)
+                {
+                    ProfileExManager.Instance.SetTestSpeed(it.IndexId, dec);
+                }
+                await UpdateFunc(it.IndexId, "", msg);
+            });
+
+            if (hasSpeed)
+            {
+                return;
             }
-            await UpdateFunc(it.IndexId, "", msg);
-        });
+        }
     }
 
     private async Task<int> DoUdpTest(ServerTestItem it)
@@ -494,7 +501,7 @@ public class SpeedtestService(Config config, Func<SpeedTestResult, Task> updateF
         {
             using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(5));
             await clientSocket.ConnectAsync(endPoint, cts.Token).ConfigureAwait(false);
-            responseTime = (int)timer.ElapsedMilliseconds;
+            responseTime = Math.Max(1, (int)timer.ElapsedMilliseconds);
         }
         catch (OperationCanceledException)
         {

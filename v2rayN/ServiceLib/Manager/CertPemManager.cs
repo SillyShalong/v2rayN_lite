@@ -196,6 +196,10 @@ public class CertPemManager
         try
         {
             var (domain, _, port, _) = Utils.ParseUrl(target);
+            if (!ExternalConnectionGuard.IsHostAllowed(domain))
+            {
+                return (null, ExternalConnectionGuard.BlockedMessage);
+            }
 
             using var cts = new CancellationTokenSource();
             cts.CancelAfter(TimeSpan.FromSeconds(timeout));
@@ -246,6 +250,10 @@ public class CertPemManager
         try
         {
             var (domain, _, port, _) = Utils.ParseUrl(target);
+            if (!ExternalConnectionGuard.IsHostAllowed(domain))
+            {
+                return (pemList, ExternalConnectionGuard.BlockedMessage);
+            }
 
             using var cts = new CancellationTokenSource();
             cts.CancelAfter(TimeSpan.FromSeconds(timeout));

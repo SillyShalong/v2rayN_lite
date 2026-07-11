@@ -7,6 +7,7 @@ namespace ServiceLib.Services;
 /// </summary>
 public class DownloadService
 {
+    public Func<string, bool>? ExternalUrlValidator { get; set; }
     public event EventHandler<UpdateResult>? UpdateCompleted;
 
     public event ErrorEventHandler? Error;
@@ -16,12 +17,27 @@ public class DownloadService
     /// <summary>
     /// Downloads data with the specified proxy and reports progress messages.
     /// </summary>
-    public async Task<int> DownloadDataAsync(string url, IWebProxy webProxy, int downloadTimeout, Func<bool, string, Task> updateFunc)
+    public async Task<bool> DownloadDataAsync(string url, IWebProxy webProxy, int downloadTimeout, Func<bool, string, Task> updateFunc)
     {
+        if (!await EnsureExternalUrlAllowed(url, updateFunc))
+        {
+            return false;
+        }
+
+        var hasPositiveSpeed = false;
+        decimal maxMeasuredSpeed = 0;
         try
         {
-            var progress = new Progress<string>();
-            progress.ProgressChanged += (sender, value) => updateFunc?.Invoke(false, $"{value}");
+            var progress = new InlineProgress<string>(value =>
+            {
+                if (decimal.TryParse(value, out var speed) && speed > 0)
+                {
+                    hasPositiveSpeed = true;
+                    maxMeasuredSpeed = Math.Max(maxMeasuredSpeed, speed);
+                }
+
+                _ = updateFunc?.Invoke(false, $"{value}");
+            });
 
             await DownloaderHelper.Instance.DownloadDataAsync4Speed(webProxy,
                   url,
@@ -30,13 +46,26 @@ public class DownloadService
         }
         catch (Exception ex)
         {
-            await updateFunc?.Invoke(false, ex.Message);
-            if (ex.InnerException != null)
+            if (!hasPositiveSpeed)
             {
-                await updateFunc?.Invoke(false, ex.InnerException.Message);
+                await updateFunc?.Invoke(false, ex.Message);
+                if (ex.InnerException != null)
+                {
+                    await updateFunc?.Invoke(false, ex.InnerException.Message);
+                }
             }
         }
-        return 0;
+
+        if (hasPositiveSpeed)
+        {
+            await updateFunc?.Invoke(true, maxMeasuredSpeed.ToString());
+        }
+        return hasPositiveSpeed;
+    }
+
+    private sealed class InlineProgress<T>(Action<T> handler) : IProgress<T>
+    {
+        public void Report(T value) => handler(value);
     }
 
     /// <summary>
@@ -44,6 +73,11 @@ public class DownloadService
     /// </summary>
     public async Task DownloadFileAsync(string url, string fileName, bool blProxy, int downloadTimeout)
     {
+        if (!await EnsureExternalUrlAllowed(url))
+        {
+            return;
+        }
+
         try
         {
             UpdateCompleted?.Invoke(this, new UpdateResult(false, $"{ResUI.Downloading}   {url}"));
@@ -75,6 +109,11 @@ public class DownloadService
     /// </summary>
     public async Task<string?> UrlRedirectAsync(string url, bool blProxy)
     {
+        if (!await EnsureExternalUrlAllowed(url))
+        {
+            return null;
+        }
+
         var webRequestHandler = new SocketsHttpHandler
         {
             AllowAutoRedirect = false,
@@ -109,6 +148,11 @@ public class DownloadService
     /// </summary>
     public async Task<string?> TryDownloadString(string url, IWebProxy? webProxy, string userAgent)
     {
+        if (!await EnsureExternalUrlAllowed(url))
+        {
+            return null;
+        }
+
         try
         {
             var result1 = await DownloadStringAsync(url, webProxy, userAgent, 15);
@@ -250,5 +294,23 @@ public class DownloadService
         {
             return false;
         }
+    }
+
+    private async Task<bool> EnsureExternalUrlAllowed(string url, Func<bool, string, Task>? updateFunc = null)
+    {
+        if (ExternalConnectionGuard.IsUrlAllowed(url) || ExternalUrlValidator?.Invoke(url) == true)
+        {
+            return true;
+        }
+
+        var ex = new InvalidOperationException($"{ExternalConnectionGuard.BlockedMessage} {url}");
+        Logging.SaveLog(_tag, ex);
+        Error?.Invoke(this, new ErrorEventArgs(ex));
+        if (updateFunc != null)
+        {
+            await updateFunc(false, ExternalConnectionGuard.BlockedMessage);
+        }
+
+        return false;
     }
 }

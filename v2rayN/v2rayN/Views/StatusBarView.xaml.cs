@@ -12,7 +12,6 @@ public partial class StatusBarView
         _config = AppManager.Instance.Config;
         ViewModel = StatusBarViewModel.Instance;
         ViewModel?.InitUpdateView(UpdateViewHandler);
-
         menuExit.Click += menuExit_Click;
         txtRunningServerDisplay.PreviewMouseDown += txtRunningInfoDisplay_MouseDoubleClick;
         txtRunningInfoDisplay.PreviewMouseDown += txtRunningInfoDisplay_MouseDoubleClick;

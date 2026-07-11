@@ -8,7 +8,6 @@ namespace v2rayN.Views;
 public partial class MainWindow
 {
     private static Config _config;
-    private CheckUpdateView? _checkUpdateView;
     private BackupAndRestoreView? _backupAndRestoreView;
 
     public MainWindow()
@@ -22,10 +21,7 @@ public partial class MainWindow
         Closing += MainWindow_Closing;
         PreviewKeyDown += MainWindow_PreviewKeyDown;
         menuSettingsSetUWP.Click += MenuSettingsSetUWP_Click;
-        menuPromotion.Click += MenuPromotion_Click;
         menuClose.Click += MenuClose_Click;
-        menuCheckUpdate.Click += MenuCheckUpdate_Click;
-        btnNewUpdate.Click += MenuCheckUpdate_Click;
         menuBackupAndRestore.Click += MenuBackupAndRestore_Click;
 
         ViewModel = new MainWindowViewModel(UpdateViewHandler);
@@ -94,7 +90,8 @@ public partial class MainWindow
             this.BindCommand(ViewModel, vm => vm.FullConfigTemplateCmd, v => v.menuFullConfigTemplate).DisposeWith(disposables);
             this.BindCommand(ViewModel, vm => vm.GlobalHotkeySettingCmd, v => v.menuGlobalHotkeySetting).DisposeWith(disposables);
             this.BindCommand(ViewModel, vm => vm.RebootAsAdminCmd, v => v.menuRebootAsAdmin).DisposeWith(disposables);
-            this.BindCommand(ViewModel, vm => vm.ClearServerStatisticsCmd, v => v.menuClearServerStatistics).DisposeWith(disposables);
+                        this.BindCommand(ViewModel, vm => vm.ClearServerStatisticsCmd, v => v.menuClearServerStatistics).DisposeWith(disposables);
+            this.BindCommand(ViewModel, vm => vm.CheckUpdateCmd, v => v.menuCheckUpdate).DisposeWith(disposables);
             this.BindCommand(ViewModel, vm => vm.OpenTheFileLocationCmd, v => v.menuOpenTheFileLocation).DisposeWith(disposables);
             this.BindCommand(ViewModel, vm => vm.RegionalPresetDefaultCmd, v => v.menuRegionalPresetsDefault).DisposeWith(disposables);
             this.BindCommand(ViewModel, vm => vm.RegionalPresetRussiaCmd, v => v.menuRegionalPresetsRussia).DisposeWith(disposables);
@@ -102,8 +99,6 @@ public partial class MainWindow
 
             this.BindCommand(ViewModel, vm => vm.ReloadCmd, v => v.menuReload).DisposeWith(disposables);
             this.OneWayBind(ViewModel, vm => vm.BlReloadEnabled, v => v.menuReload.IsEnabled).DisposeWith(disposables);
-
-            this.OneWayBind(ViewModel, vm => vm.BlNewUpdate, v => v.btnNewUpdate.Visibility).DisposeWith(disposables);
 
             switch (_config.UiItem.MainGirdOrientation)
             {
@@ -166,6 +161,7 @@ public partial class MainWindow
         }
 
         AddHelpMenuItem();
+        ApplyLiteUi();
         WindowsManager.Instance.RegisterGlobalHotkey(_config, OnHotkeyHandler, null);
     }
 
@@ -230,6 +226,10 @@ public partial class MainWindow
 
             case EViewAction.SubSettingWindow:
                 return new SubSettingWindow().ShowDialog() ?? false;
+
+            case EViewAction.CheckUpdateWindow:
+                new CheckUpdateWindow().ShowDialog();
+                return true;
 
             case EViewAction.ScanScreenTask:
                 await ScanScreenTaskAsync();
@@ -317,11 +317,6 @@ public partial class MainWindow
         ShowHideWindow(false);
     }
 
-    private void MenuPromotion_Click(object sender, RoutedEventArgs e)
-    {
-        ProcUtils.ProcessStart($"{Utils.Base64Decode(Global.PromotionUrl)}?t={DateTime.Now.Ticks}");
-    }
-
     private void MenuSettingsSetUWP_Click(object sender, RoutedEventArgs e)
     {
         ProcUtils.ProcessStart(Utils.GetBinPath("EnableLoopback.exe"));
@@ -360,14 +355,6 @@ public partial class MainWindow
             return;
         }
         await ViewModel?.ScanImageResult(fileName);
-    }
-
-    private void MenuCheckUpdate_Click(object sender, RoutedEventArgs e)
-    {
-        _checkUpdateView ??= new CheckUpdateView();
-        DialogHost.Show(_checkUpdateView, "RootDialog");
-
-        AppEvents.HasUpdateNotified.Publish(false);
     }
 
     private void MenuBackupAndRestore_Click(object sender, RoutedEventArgs e)
@@ -443,27 +430,18 @@ public partial class MainWindow
 
     private void AddHelpMenuItem()
     {
-        var coreInfo = CoreInfoManager.Instance.GetCoreInfo();
-        foreach (var it in coreInfo
-            .Where(t => t.CoreType is not ECoreType.v2fly
-                        and not ECoreType.hysteria))
-        {
-            var item = new MenuItem()
-            {
-                Tag = it.Url.Replace(@"/releases", ""),
-                Header = string.Format(ResUI.menuWebsiteItem, it.CoreType.ToString().Replace("_", " ")).UpperFirstChar()
-            };
-            item.Click += MenuItem_Click;
-            menuHelp.Items.Add(item);
-        }
+        menuHelp.Visibility = Visibility.Collapsed;
     }
 
     private void MenuItem_Click(object sender, RoutedEventArgs e)
     {
-        if (sender is MenuItem item)
-        {
-            ProcUtils.ProcessStart(item.Tag.ToString());
-        }
+        NoticeManager.Instance.Enqueue(ExternalConnectionGuard.BlockedMessage);
+    }
+
+    private void ApplyLiteUi()
+    {        menuRegionalPresetsRussia.Visibility = Visibility.Collapsed;
+        menuRegionalPresetsIran.Visibility = Visibility.Collapsed;
+        menuBackupAndRestore.Visibility = Visibility.Collapsed;
     }
 
     #endregion UI
