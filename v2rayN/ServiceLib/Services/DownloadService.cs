@@ -24,45 +24,33 @@ public class DownloadService
             return false;
         }
 
-        var hasPositiveSpeed = false;
-        decimal maxMeasuredSpeed = 0;
         try
         {
             var progress = new InlineProgress<string>(value =>
             {
-                if (decimal.TryParse(value, out var speed) && speed > 0)
-                {
-                    hasPositiveSpeed = true;
-                    maxMeasuredSpeed = Math.Max(maxMeasuredSpeed, speed);
-                }
-
-                _ = updateFunc?.Invoke(false, $"{value}");
+                _ = updateFunc?.Invoke(false, value);
             });
+            var measuredSpeed = await DownloaderHelper.Instance.DownloadDataAsync4Speed(
+                webProxy,
+                url,
+                progress,
+                downloadTimeout);
+            if (measuredSpeed <= 0)
+            {
+                await updateFunc?.Invoke(false, ResUI.OperationFailed);
+                return false;
+            }
 
-            await DownloaderHelper.Instance.DownloadDataAsync4Speed(webProxy,
-                  url,
-                  progress,
-                  downloadTimeout);
+            await updateFunc?.Invoke(true, measuredSpeed.ToString("0.0"));
+            return true;
         }
         catch (Exception ex)
         {
-            if (!hasPositiveSpeed)
-            {
-                await updateFunc?.Invoke(false, ex.Message);
-                if (ex.InnerException != null)
-                {
-                    await updateFunc?.Invoke(false, ex.InnerException.Message);
-                }
-            }
+            Logging.SaveLog(_tag, ex);
+            await updateFunc?.Invoke(false, ResUI.OperationFailed);
+            return false;
         }
-
-        if (hasPositiveSpeed)
-        {
-            await updateFunc?.Invoke(true, maxMeasuredSpeed.ToString());
-        }
-        return hasPositiveSpeed;
     }
-
     private sealed class InlineProgress<T>(Action<T> handler) : IProgress<T>
     {
         public void Report(T value) => handler(value);

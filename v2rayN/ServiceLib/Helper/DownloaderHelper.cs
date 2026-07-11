@@ -53,75 +53,71 @@ public class DownloaderHelper
         return await reader.ReadToEndAsync(cts.Token);
     }
 
-    public async Task DownloadDataAsync4Speed(IWebProxy webProxy, string url, IProgress<string> progress, int timeout)
+    public async Task<double> DownloadDataAsync4Speed(IWebProxy? webProxy, string url, IProgress<string>? progress, int timeout)
     {
         if (url.IsNullOrEmpty())
         {
             throw new ArgumentNullException(nameof(url));
         }
 
-        var downloadOpt = new DownloadConfiguration()
+        var timeoutSeconds = Math.Max(1, timeout);
+        using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(timeoutSeconds));
+        using var handler = new SocketsHttpHandler
         {
-            BlockTimeout = timeout * 1000,
-            MaxTryAgainOnFailure = 2,
-            RequestConfiguration =
-                {
-                    ConnectTimeout= timeout * 1000,
-                    Proxy = webProxy
-                }
+            AllowAutoRedirect = true,
+            ConnectTimeout = TimeSpan.FromSeconds(timeoutSeconds),
+            Proxy = webProxy,
+            UseProxy = webProxy != null
+        };
+        using var client = new HttpClient(handler)
+        {
+            Timeout = Timeout.InfiniteTimeSpan
         };
 
-        var lastUpdateTime = DateTime.Now;
-        var hasValue = false;
-        double maxSpeed = 0;
-        await using var downloader = new Downloader.DownloadService(downloadOpt);
+        using var response = await client.GetAsync(url, HttpCompletionOption.ResponseHeadersRead, cts.Token).ConfigureAwait(false);
+        response.EnsureSuccessStatusCode();
+        await using var stream = await response.Content.ReadAsStreamAsync(cts.Token).ConfigureAwait(false);
 
-        downloader.DownloadProgressChanged += (sender, value) =>
+        var buffer = new byte[128 * 1024];
+        long totalBytes = 0;
+        var timer = Stopwatch.StartNew();
+        var lastReportSeconds = 0d;
+        try
         {
-            if (progress != null && value.BytesPerSecondSpeed > 0)
+            while (true)
             {
-                hasValue = true;
-                if (value.BytesPerSecondSpeed > maxSpeed)
+                var read = await stream.ReadAsync(buffer, cts.Token).ConfigureAwait(false);
+                if (read == 0)
                 {
-                    maxSpeed = value.BytesPerSecondSpeed;
+                    break;
                 }
 
-                var ts = DateTime.Now - lastUpdateTime;
-                if (ts.TotalMilliseconds >= 1000)
+                totalBytes += read;
+                var elapsedSeconds = timer.Elapsed.TotalSeconds;
+                if (elapsedSeconds - lastReportSeconds >= 1)
                 {
-                    lastUpdateTime = DateTime.Now;
-                    var speed = (maxSpeed / 1000 / 1000).ToString("#0.0");
-                    progress.Report(speed);
+                    lastReportSeconds = elapsedSeconds;
+                    var currentSpeed = totalBytes / 1_000_000d / Math.Max(elapsedSeconds, 0.001d);
+                    progress?.Report(currentSpeed.ToString("0.0"));
                 }
             }
-        };
-        downloader.DownloadFileCompleted += (sender, value) =>
+        }
+        catch (OperationCanceledException) when (cts.IsCancellationRequested && totalBytes > 0)
         {
-            if (progress != null)
-            {
-                if (hasValue && maxSpeed > 0)
-                {
-                    var finalSpeed = (maxSpeed / 1000 / 1000).ToString("#0.0");
-                    progress.Report(finalSpeed);
-                }
-                else if (value.Error != null)
-                {
-                    progress.Report(value.Error?.Message);
-                }
-                else
-                {
-                    progress.Report("0");
-                }
-            }
-        };
-        //progress.Report("......");
-        using var cts = new CancellationTokenSource();
-        cts.CancelAfter(timeout * 1000);
-        await using var stream = await downloader.DownloadFileTaskAsync(address: url, cts.Token);
+            // Reaching the configured duration is a successful bounded speed test.
+        }
+        finally
+        {
+            timer.Stop();
+        }
 
-        downloadOpt = null;
+        if (totalBytes < 64 * 1024)
+        {
+            return 0;
+        }
+
+        return totalBytes / 1_000_000d / Math.Max(timer.Elapsed.TotalSeconds, 0.001d);
     }
-
     public async Task DownloadFileAsync(IWebProxy? webProxy, string url, string fileName, IProgress<double> progress, int timeout)
     {
         if (url.IsNullOrEmpty())

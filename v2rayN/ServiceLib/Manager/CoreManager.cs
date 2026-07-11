@@ -103,10 +103,11 @@ public class CoreManager
 
     public async Task<ProcessService?> LoadCoreConfigSpeedtest(List<ServerTestItem> selecteds)
     {
+        var speedtestConfig = GetSpeedtestConfig();
         var coreType = selecteds.FirstOrDefault()?.CoreType == ECoreType.sing_box ? ECoreType.sing_box : ECoreType.Xray;
         var fileName = string.Format(Global.CoreSpeedtestConfigFileName, Utils.GetGuid(false));
         var configPath = Utils.GetBinConfigPath(fileName);
-        var result = await CoreConfigHandler.GenerateClientSpeedtestConfig(_config, configPath, selecteds, coreType);
+        var result = await CoreConfigHandler.GenerateClientSpeedtestConfig(speedtestConfig, configPath, selecteds, coreType);
         await UpdateFunc(false, result.Msg);
         if (result.Success != true)
         {
@@ -128,10 +129,11 @@ public class CoreManager
             return null;
         }
 
+        var speedtestConfig = GetSpeedtestConfig();
         var fileName = string.Format(Global.CoreSpeedtestConfigFileName, Utils.GetGuid(false));
         var configPath = Utils.GetBinConfigPath(fileName);
-        var (context, _) = await CoreConfigContextBuilder.Build(_config, node);
-        var result = await CoreConfigHandler.GenerateClientSpeedtestConfig(_config, context, testItem, configPath);
+        var (context, _) = await CoreConfigContextBuilder.Build(speedtestConfig, node);
+        var result = await CoreConfigHandler.GenerateClientSpeedtestConfig(speedtestConfig, context, testItem, configPath);
         if (result.Success != true)
         {
             return null;
@@ -140,6 +142,26 @@ public class CoreManager
         var coreType = context.RunCoreType;
         var coreInfo = CoreInfoManager.Instance.GetCoreInfo(coreType);
         return await RunProcess(coreInfo, fileName, true, false);
+    }
+
+    private Config GetSpeedtestConfig()
+    {
+        if (!Utils.IsWindows()
+            || !_config.TunModeItem.EnableTun
+            || !_config.CoreBasicItem.BindInterface.IsNullOrEmpty())
+        {
+            return _config;
+        }
+
+        var interfaceName = Utils.GetDefaultNetworkInterfaceName();
+        if (interfaceName.IsNullOrEmpty())
+        {
+            return _config;
+        }
+
+        var speedtestConfig = JsonUtils.DeepCopy(_config) ?? _config;
+        speedtestConfig.CoreBasicItem.BindInterface = interfaceName;
+        return speedtestConfig;
     }
 
     public async Task CoreStop()

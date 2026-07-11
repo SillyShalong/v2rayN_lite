@@ -239,7 +239,6 @@
                                     Header="{x:Static resx:ResUI.menuOpenTheFileLocation}" />
                             </MenuItem>
                         </Menu>
-                        <Separator />
                         <Menu Margin="0,1" Style="{StaticResource ToolbarMenu}">
                             <MenuItem
                                 x:Name="menuHelp"

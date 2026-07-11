@@ -809,6 +809,36 @@ public class Utils
             .Any(ni => ni.Name.Equals(inInterfaceName, StringComparison.OrdinalIgnoreCase));
     }
 
+    public static string? GetDefaultNetworkInterfaceName()
+    {
+        try
+        {
+            return NetworkInterface.GetAllNetworkInterfaces()
+                .Where(ni => ni.OperationalStatus == OperationalStatus.Up
+                    && ni.NetworkInterfaceType is not (NetworkInterfaceType.Loopback or NetworkInterfaceType.Tunnel))
+                .Where(ni => ni.GetIPProperties().GatewayAddresses.Any(gateway =>
+                    !gateway.Address.Equals(IPAddress.Any)
+                    && !gateway.Address.Equals(IPAddress.IPv6Any)
+                    && !IPAddress.IsLoopback(gateway.Address)))
+                .OrderBy(ni => ni.NetworkInterfaceType switch
+                {
+                    NetworkInterfaceType.Ethernet => 0,
+                    NetworkInterfaceType.GigabitEthernet => 0,
+                    NetworkInterfaceType.FastEthernetFx => 0,
+                    NetworkInterfaceType.FastEthernetT => 0,
+                    NetworkInterfaceType.Wireless80211 => 1,
+                    _ => 2
+                })
+                .ThenByDescending(ni => ni.Speed)
+                .Select(ni => ni.Name)
+                .FirstOrDefault();
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
     #endregion Speed Test
 
     #region Miscellaneous

@@ -126,7 +126,8 @@ public static class ConfigHandler
         {
             config.SpeedTestItem.SpeedTestTimeout = 10;
         }
-        if (config.SpeedTestItem.SpeedTestUrl.IsNullOrEmpty())
+        if (config.SpeedTestItem.SpeedTestUrl.IsNullOrEmpty()
+            || config.SpeedTestItem.SpeedTestUrl.Equals("https://cachefly.cachefly.net/50mb.test", StringComparison.OrdinalIgnoreCase))
         {
             config.SpeedTestItem.SpeedTestUrl = Global.SpeedTestUrls.First();
         }

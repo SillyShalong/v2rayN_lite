@@ -378,7 +378,11 @@ public class SpeedtestService(Config config, Func<SpeedTestResult, Task> updateF
                         return;
                     }
 
-                    await Task.Delay(1000);
+                    if (!await WaitForProxyPort(it.Port, TimeSpan.FromSeconds(5)))
+                    {
+                        await UpdateFunc(it.IndexId, "-1", ResUI.FailedToRunCore);
+                        return;
+                    }
 
                     await DoRealPing(it);
                     if (blSpeedTest)
@@ -409,20 +413,45 @@ public class SpeedtestService(Config config, Func<SpeedTestResult, Task> updateF
         await Task.WhenAll(tasks);
     }
 
+    private static async Task<bool> WaitForProxyPort(int port, TimeSpan timeout)
+    {
+        using var timeoutCts = new CancellationTokenSource(timeout);
+        while (!timeoutCts.IsCancellationRequested)
+        {
+            using var client = new TcpClient();
+            try
+            {
+                await client.ConnectAsync(IPAddress.Loopback, port, timeoutCts.Token).ConfigureAwait(false);
+                return client.Connected;
+            }
+            catch (OperationCanceledException)
+            {
+                return false;
+            }
+            catch
+            {
+                try
+                {
+                    await Task.Delay(100, timeoutCts.Token).ConfigureAwait(false);
+                }
+                catch (OperationCanceledException)
+                {
+                    return false;
+                }
+            }
+        }
+
+        return false;
+    }
     private async Task<int> DoRealPing(ServerTestItem it)
     {
         var webProxy = new WebProxy($"socks5://{Global.Loopback}:{it.Port}");
-        var httpResponseTime = await ConnectionHandler.GetRealPingTime(webProxy, 10, it.Profile);
-        var responseTime = httpResponseTime;
-        if (responseTime <= 0)
-        {
-            responseTime = await GetTcpingTime(it.Profile.Address, it.Profile.Port);
-        }
+        var responseTime = await ConnectionHandler.GetRealPingTime(webProxy, 10);
 
         ProfileExManager.Instance.SetTestDelay(it.IndexId, responseTime);
         await UpdateFunc(it.IndexId, responseTime.ToString());
 
-        if (httpResponseTime > 0)
+        if (responseTime > 0)
         {
             var ipInfo = await ConnectionHandler.GetIPInfo(webProxy);
             var ipStr = ipInfo?.ToString() ?? Global.None;
@@ -442,29 +471,21 @@ public class SpeedtestService(Config config, Func<SpeedTestResult, Task> updateF
 
         var downloadHandle = new DownloadService()
         {
-            ExternalUrlValidator = url => ExternalConnectionGuard.IsSpeedTestUrlAllowed(url, it.Profile)
+            ExternalUrlValidator = ExternalConnectionGuard.IsSpeedTestUrlAllowed
         };
         var webProxy = new WebProxy($"socks5://{Global.Loopback}:{it.Port}");
+        var url = _config.SpeedTestItem.SpeedTestUrl;
         var timeout = _config.SpeedTestItem.SpeedTestTimeout;
-        foreach (var url in ExternalConnectionGuard.GetAllowedSpeedTestUrls())
+        await downloadHandle.DownloadDataAsync(url, webProxy, timeout, async (success, msg) =>
         {
-            var hasSpeed = await downloadHandle.DownloadDataAsync(url, webProxy, timeout, async (success, msg) =>
+            decimal.TryParse(msg, out var dec);
+            if (dec > 0)
             {
-                decimal.TryParse(msg, out var dec);
-                if (dec > 0)
-                {
-                    ProfileExManager.Instance.SetTestSpeed(it.IndexId, dec);
-                }
-                await UpdateFunc(it.IndexId, "", msg);
-            });
-
-            if (hasSpeed)
-            {
-                return;
+                ProfileExManager.Instance.SetTestSpeed(it.IndexId, dec);
             }
-        }
+            await UpdateFunc(it.IndexId, "", msg);
+        });
     }
-
     private async Task<int> DoUdpTest(ServerTestItem it)
     {
         var udpService = UdpTestService.CreateFromTarget(_config?.SpeedTestItem.UdpTestTarget, out var udpTestUrl);

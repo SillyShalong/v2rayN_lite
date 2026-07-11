@@ -66,62 +66,48 @@ public static class ConnectionHandler
     /// <summary>
     /// Measures response time by sending HTTP requests through proxy.
     /// </summary>
-    public static async Task<int> GetRealPingTime(IWebProxy? webProxy, int downloadTimeout, ProfileItem? profileItem = null)
+    public static async Task<int> GetRealPingTime(IWebProxy? webProxy, int downloadTimeout)
     {
-        var candidateUrls = ExternalConnectionGuard.GetAllowedSpeedPingTestUrls(profileItem);
-        if (profileItem != null)
+        var url = AppManager.Instance.Config.SpeedTestItem.SpeedPingTestUrl;
+        if (!ExternalConnectionGuard.IsSpeedTestUrlAllowed(url))
         {
-            candidateUrls = candidateUrls.Take(4).ToList();
+            return -1;
         }
 
-        var attemptCount = profileItem != null ? 1 : 2;
-        var effectiveTimeout = profileItem != null ? Math.Min(downloadTimeout, 3) : downloadTimeout;
-
-        foreach (var url in candidateUrls)
+        using var client = new HttpClient(new SocketsHttpHandler()
         {
-            if (!ExternalConnectionGuard.IsSpeedTestUrlAllowed(url, profileItem))
-            {
-                continue;
-            }
+            AllowAutoRedirect = false,
+            ConnectTimeout = TimeSpan.FromSeconds(downloadTimeout),
+            Proxy = webProxy,
+            UseProxy = webProxy != null
+        })
+        {
+            Timeout = Timeout.InfiniteTimeSpan
+        };
 
-            var responseTime = -1;
+        List<int> samples = [];
+        for (var i = 0; i < 2; i++)
+        {
             try
             {
-                using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(effectiveTimeout));
-                using var client = new HttpClient(new SocketsHttpHandler()
-                {
-                    AllowAutoRedirect = false,
-                    Proxy = webProxy,
-                    UseProxy = webProxy != null
-                });
-
-                List<int> oneTime = [];
-                for (var i = 0; i < attemptCount; i++)
-                {
-                    var timer = Stopwatch.StartNew();
-                    using var response = await client.GetAsync(url, HttpCompletionOption.ResponseHeadersRead, cts.Token).ConfigureAwait(false);
-                    timer.Stop();
-                    oneTime.Add((int)timer.Elapsed.TotalMilliseconds);
-                    if (i + 1 < attemptCount)
-                    {
-                        await Task.Delay(100, cts.Token);
-                    }
-                }
-                responseTime = oneTime.Where(x => x > 0).OrderBy(x => x).FirstOrDefault();
+                using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(downloadTimeout));
+                var timer = Stopwatch.StartNew();
+                using var response = await client.GetAsync(url, HttpCompletionOption.ResponseHeadersRead, cts.Token).ConfigureAwait(false);
+                timer.Stop();
+                samples.Add(Math.Max(1, (int)timer.Elapsed.TotalMilliseconds));
             }
             catch
             {
             }
 
-            if (responseTime > 0)
+            if (i == 0)
             {
-                return responseTime;
+                await Task.Delay(100);
             }
         }
 
-        return -1;
+        return samples.Count > 0 ? samples.Min() : -1;
     }
-
     /// <summary>
     /// Gets IP and country information through specified proxy.
     /// </summary>
