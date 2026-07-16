@@ -14,17 +14,23 @@ public partial class CoreConfigV2rayService
                     _coreConfig.routing.rules.AddRange(tunRules);
                 }
                 var (lstDnsExe, lstDirectExe) = BuildRoutingDirectExe();
-                _coreConfig.routing.rules.Add(new()
+                if (lstDnsExe.Count > 0)
                 {
-                    port = "53",
-                    process = lstDnsExe,
-                    outboundTag = Global.DnsOutboundTag,
-                });
-                _coreConfig.routing.rules.Add(new()
+                    _coreConfig.routing.rules.Add(new()
+                    {
+                        port = "53",
+                        process = lstDnsExe,
+                        outboundTag = Global.DnsOutboundTag,
+                    });
+                }
+                if (lstDirectExe.Count > 0)
                 {
-                    process = lstDirectExe,
-                    outboundTag = Global.DirectTag,
-                });
+                    _coreConfig.routing.rules.Add(new()
+                    {
+                        process = lstDirectExe,
+                        outboundTag = Global.DirectTag,
+                    });
+                }
                 _coreConfig.routing.rules.Add(new()
                 {
                     inboundTag = ["tun"],
