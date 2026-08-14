@@ -482,6 +482,7 @@ public partial class CoreConfigV2rayService
                             settings = new MaskSettings4Ray { value = kcpSeed },
                         });
                     }
+                    kcpFinalmask.udp?.Reverse();
                     streamSettings.kcpSettings = kcpSettings;
                     streamSettings.finalmask = kcpFinalmask;
                     break;
@@ -636,6 +637,7 @@ public partial class CoreConfigV2rayService
                         version = 2,
                         auth = _node.Password,
                     };
+                    hy2Finalmask.udp?.Reverse();
                     streamSettings.finalmask = hy2Finalmask;
                     break;
 
