@@ -164,7 +164,23 @@ public class Hysteria2Fmt : BaseFmt
     {
         if (item.CertSha.IsNullOrEmpty())
         {
+<<<<<<< HEAD
             item.CertSha = GetQueryDecoded(query, "pinSHA256");
+=======
+            var pinSHA256 = GetQueryDecoded(query, "pinSHA256");
+            item.CertSha = pinSHA256;
+            if (!pinSHA256.IsNullOrEmpty())
+            {
+                // NOTE:
+                // To accommodate Xray changes,
+                // some providers issue self-signed cert links with `insecure = false` and a certificate fingerprint,
+                // breaking interoperability between Xray, official Hysteria 2 client, and sing-box.
+                // Since this won't compromise the overall security model,
+                // `insecure = true` is automatically set when a fingerprint is detected,
+                // and the value is restored when generating configurations.
+                item.AllowInsecure = Global.StringTrue;
+            }
+>>>>>>> 11bd52b6 (Fix (#9987))
         }
         item.SetProtocolExtra(item.GetProtocolExtra() with
         {
