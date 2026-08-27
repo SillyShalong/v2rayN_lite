@@ -220,6 +220,18 @@ public class Hysteria2Fmt : BaseFmt
             var sha = item.CertSha;
             dicQuery.Add("pinSHA256", Utils.UrlEncode(sha));
         }
+<<<<<<< HEAD
+=======
+        else if (!item.Cert.IsNullOrEmpty()
+            && CertPemManager.GetLeafCertSha256Thumbprint(item.Cert) is { Length: > 0 } thumbprint)
+        {
+            dicQuery.Add("pinSHA256", Utils.UrlEncode(thumbprint));
+        }
+        if (!item.EchConfigList.IsNullOrEmpty())
+        {
+            dicQuery.Add("ech", Utils.UrlEncode(item.EchConfigList));
+        }
+>>>>>>> 0a2f3e4f (Fix hy2 fmt (#10044))
         var protocolExtraItem = item.GetProtocolExtra();
         var isGecko = !protocolExtraItem.GeckoMinPacketSize.IsNullOrEmpty() || !protocolExtraItem.GeckoMaxPacketSize.IsNullOrEmpty();
         if (!protocolExtraItem.SalamanderPass.IsNullOrEmpty())

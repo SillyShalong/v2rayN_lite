@@ -450,4 +450,84 @@ public class CertPemManager
             return string.Empty;
         }
     }
+<<<<<<< HEAD
+=======
+
+    public static string GetLeafCertSha256Thumbprint(string pemCertChain, bool includeColon = false)
+    {
+        var certs = ParsePemChain(pemCertChain);
+        if (certs.Count == 0)
+        {
+            return string.Empty;
+        }
+        foreach (var certStr in certs)
+        {
+            try
+            {
+                var cert = X509Certificate2.CreateFromPem(certStr);
+                var extension = cert.Extensions
+                    .OfType<X509BasicConstraintsExtension>()
+                    .FirstOrDefault();
+                var isCa = extension?.CertificateAuthority == true;
+                if (isCa)
+                {
+                    continue;
+                }
+                var thumbprint = cert.GetCertHashString(HashAlgorithmName.SHA256);
+                return includeColon ? string.Join(":", thumbprint.Chunk(2).Select(c => new string(c))) : thumbprint;
+            }
+            catch
+            {
+                // Ignore
+            }
+        }
+        return string.Empty;
+    }
+
+    private static readonly Lazy<X509Certificate2Collection> _chromeRootCerts = new(() =>
+    {
+        var pemText = EmbedUtils.GetEmbedText(Global.ChromeRootCertFileName);
+        var collection = new X509Certificate2Collection();
+        collection.ImportFromPem(pemText);
+        return collection;
+    });
+
+    private static readonly Lazy<X509Certificate2Collection> _mozillaRootCerts = new(() =>
+    {
+        var pemText = EmbedUtils.GetEmbedText(Global.MozillaRootCertFileName);
+        var collection = new X509Certificate2Collection();
+        collection.ImportFromPem(pemText);
+        return collection;
+    });
+
+    private X509Certificate2Collection BuildTrustedCertificateCollection()
+    {
+        if (_config.GuiItem.RootCertProvider == Global.ChromeRootProvider)
+        {
+            return _chromeRootCerts.Value;
+        }
+        return _mozillaRootCerts.Value;
+    }
+
+    private bool IsSystemRootCertProvider()
+    {
+        return _config.GuiItem.RootCertProvider != Global.ChromeRootProvider && _config.GuiItem.RootCertProvider != Global.MozillaRootProvider;
+    }
+
+    public X509ChainPolicy? BuildCertificateChainPolicy()
+    {
+        if (IsSystemRootCertProvider())
+        {
+            return null;
+        }
+        var trustedCerts = BuildTrustedCertificateCollection();
+        var chainPolicy = new X509ChainPolicy
+        {
+            TrustMode = X509ChainTrustMode.CustomRootTrust,
+            RevocationMode = X509RevocationMode.NoCheck,
+        };
+        chainPolicy.CustomTrustStore.AddRange(trustedCerts);
+        return chainPolicy;
+    }
+>>>>>>> 0a2f3e4f (Fix hy2 fmt (#10044))
 }
