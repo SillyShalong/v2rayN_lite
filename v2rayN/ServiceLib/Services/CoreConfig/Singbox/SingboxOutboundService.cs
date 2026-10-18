@@ -339,6 +339,12 @@ public partial class CoreConfigSingboxService
             {
                 case EConfigType.WireGuard:
                     {
+<<<<<<< HEAD
+=======
+                        endpoint.server = null;
+                        endpoint.server_port = null;
+                        endpoint.address = Utils.String2List(protocolExtra.WgInterfaceAddress)?.Select(s => s.Trim()).ToList() ?? ["172.16.0.2/32"];
+>>>>>>> 5e0ea327 (Fix (#10404))
                         var peer = new Peer4Sbox
                         {
                             public_key = protocolExtra.WgPublicKey ?? string.Empty,
