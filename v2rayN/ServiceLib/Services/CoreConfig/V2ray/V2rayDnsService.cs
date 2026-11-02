@@ -335,15 +335,26 @@ public partial class CoreConfigV2rayService
             {
                 return;
             }
-            foreach (var dnsAddress in dnsAddresses)
+            //foreach (var dnsAddress in dnsAddresses)
+            for (var i = 0; i < dnsAddresses.Count; i++)
             {
+                var dnsAddress = dnsAddresses[i];
                 var dnsServer = CreateDnsServer(dnsAddress, domains, expectedIPs);
                 if (isDirectDns)
                 {
                     dnsServer.tag = $"{Global.DirectDnsTag}-{directDnsTagIndex++}";
                 }
+<<<<<<< HEAD
                 var dnsServerNode = JsonUtils.SerializeToNode(dnsServer,
                     new JsonSerializerOptions { DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull });
+=======
+                if (expectedIPs is not null
+                    && i == expectedIPs.Count - 1)
+                {
+                    dnsServer.finalQuery = true;
+                }
+                var dnsServerNode = JsonUtils.SerializeToNode(dnsServer);
+>>>>>>> 0856ffd7 (Try fix dns (#10485))
                 dnsItem.servers.Add(dnsServerNode);
             }
         }
