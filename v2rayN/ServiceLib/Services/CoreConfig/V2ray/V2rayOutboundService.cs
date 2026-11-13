@@ -450,18 +450,7 @@ public partial class CoreConfigV2rayService
                     };
 
                     var kcpFinalmask = new Finalmask4Ray();
-                    if (Global.KcpHeaderMaskMap.TryGetValue(headerType, out var header))
-                    {
-                        kcpFinalmask.udp =
-                        [
-                            new Mask4Ray
-                            {
-                                type = "mkcp-legacy",
-                                settings = new MaskSettings4Ray { header = header },
-                            }
-                        ];
-                    }
-                    kcpFinalmask.udp ??= [];
+                    kcpFinalmask.udp = [];
                     if (kcpSeed.IsNullOrEmpty())
                     {
                         kcpFinalmask.udp.Add(new Mask4Ray
@@ -477,7 +466,14 @@ public partial class CoreConfigV2rayService
                             settings = new MaskSettings4Ray { value = kcpSeed },
                         });
                     }
-                    kcpFinalmask.udp?.Reverse();
+                    if (Global.KcpHeaderMaskMap.TryGetValue(headerType, out var header))
+                    {
+                        kcpFinalmask.udp.Add(new Mask4Ray
+                        {
+                            type = "mkcp-legacy",
+                            settings = new MaskSettings4Ray { header = header },
+                        });
+                    }
                     streamSettings.kcpSettings = kcpSettings;
                     streamSettings.finalmask = kcpFinalmask;
                     break;
