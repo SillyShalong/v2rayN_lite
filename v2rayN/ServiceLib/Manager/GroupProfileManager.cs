@@ -119,7 +119,7 @@ public class GroupProfileManager
                 p != null &&
                 p.IsValid() &&
                 !p.ConfigType.IsComplexType() &&
-                (extra.Filter.IsNullOrEmpty() || Regex.IsMatch(p.Remarks, extra.Filter))
+                Utils.IsRegexMatch(p.Remarks, extra.Filter)
             )
             .ToList() ?? [];
     }

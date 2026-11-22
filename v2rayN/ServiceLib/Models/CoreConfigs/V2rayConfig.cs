@@ -350,8 +350,6 @@ public class StreamSettings4Ray
 
 public class TlsSettings4Ray
 {
-    public bool? allowInsecure { get; set; }
-
     public string? serverName { get; set; }
 
     public List<string>? alpn { get; set; }

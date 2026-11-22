@@ -20,4 +20,5 @@ public record CoreConfigContext
 
     public bool IsWindows { get; init; }
     public bool IsMacOS { get; init; }
+    public bool HasGlobalIPv6Address { get; init; } = true;
 }

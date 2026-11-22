@@ -8,6 +8,7 @@ namespace ServiceLib.Services;
 public class DownloadService
 {
     public Func<string, bool>? ExternalUrlValidator { get; set; }
+    public string? AcceptHeader { get; init; }
     public event EventHandler<UpdateResult>? UpdateCompleted;
 
     public event ErrorEventHandler? Error;
@@ -187,17 +188,23 @@ public class DownloadService
     {
         try
         {
-            var client = new HttpClient(new SocketsHttpHandler()
+            using var handler = new SocketsHttpHandler()
             {
                 Proxy = webProxy,
-                UseProxy = webProxy != null
-            });
+                UseProxy = webProxy != null,
+                AutomaticDecompression = DecompressionMethods.All
+            };
+            using var client = new HttpClient(handler);
 
             if (userAgent.IsNullOrEmpty())
             {
                 userAgent = Utils.GetVersion(false);
             }
             client.DefaultRequestHeaders.UserAgent.TryParseAdd(userAgent);
+            if (AcceptHeader.IsNotEmpty())
+            {
+                client.DefaultRequestHeaders.Accept.ParseAdd(AcceptHeader);
+            }
 
             Uri uri = new(url);
             //Authorization Header
@@ -233,7 +240,8 @@ public class DownloadService
             {
                 userAgent = Utils.GetVersion(false);
             }
-            var result = await DownloaderHelper.Instance.DownloadStringAsync(webProxy, url, userAgent, timeout);
+            var result = await DownloaderHelper.Instance.DownloadStringAsync(webProxy, url, userAgent, timeout,
+                AcceptHeader);
             return result;
         }
         catch (Exception ex)

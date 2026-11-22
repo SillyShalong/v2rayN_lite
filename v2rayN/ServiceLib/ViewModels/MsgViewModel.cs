@@ -3,7 +3,6 @@ namespace ServiceLib.ViewModels;
 public class MsgViewModel : MyReactiveObject
 {
     private readonly ConcurrentQueue<string> _queueMsg = new();
-    private volatile bool _lastMsgFilterNotAvailable;
     private int _showLock = 0; // 0 = unlocked, 1 = locked
     public int NumMaxMsg { get; } = 500;
 
@@ -75,19 +74,11 @@ public class MsgViewModel : MyReactiveObject
     private void EnqueueQueueMsg(string msg)
     {
         //filter msg
-        if (MsgFilter.IsNotEmpty() && !_lastMsgFilterNotAvailable)
+        if (MsgFilter.IsNotEmpty())
         {
-            try
+            if (!Utils.IsRegexMatch(msg, MsgFilter))
             {
-                if (!Regex.IsMatch(msg, MsgFilter))
-                {
-                    return;
-                }
-            }
-            catch (Exception ex)
-            {
-                EnqueueWithLimit(ex.Message);
-                _lastMsgFilterNotAvailable = true;
+                return;
             }
         }
 
@@ -116,6 +107,5 @@ public class MsgViewModel : MyReactiveObject
     private void DoMsgFilter()
     {
         _config.MsgUIItem.MainMsgFilter = MsgFilter;
-        _lastMsgFilterNotAvailable = false;
     }
 }

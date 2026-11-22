@@ -559,4 +559,71 @@ public class CoreConfigV2rayServiceTests
         tunInbound!.settings.autoSystemRoutingTable.Should().Contain("10.0.0.0/32");
         tunInbound!.settings.autoSystemRoutingTable.Should().Contain("10.0.0.2/31");
     }
+
+    [Theory]
+    [InlineData(false, false)]
+    [InlineData(false, true)]
+    [InlineData(true, false)]
+    [InlineData(true, true)]
+    public void GenerateClientConfigContent_TunRoutesIPv6OnlyWhenHostHasGlobalAddress(
+        bool enableIPv6Address, bool hasGlobalIPv6Address)
+    {
+        var config = CoreConfigTestFactory.CreateConfig(ECoreType.Xray);
+        config.TunModeItem.EnableTun = true;
+        config.TunModeItem.EnableIPv6Address = enableIPv6Address;
+        CoreConfigTestFactory.BindAppManagerConfig(config);
+
+        var node = CoreConfigTestFactory.CreateVmessNode(ECoreType.Xray, "n-main", "main");
+        var context = CoreConfigTestFactory.CreateContext(config, node, ECoreType.Xray, hasGlobalIPv6Address);
+        var result = new CoreConfigV2rayService(context).GenerateClientConfigContent();
+
+        result.Success.Should().BeTrue();
+        var cfg = JsonUtils.Deserialize<V2rayConfig>(result.Data!.ToString())!;
+        var tunInbound = cfg.inbounds.First(i => i.protocol == "tun");
+
+        tunInbound.settings.autoSystemRoutingTable.Should().Contain("0.0.0.0/0");
+        tunInbound.settings.autoSystemRoutingTable.Contains("::/0").Should().Be(hasGlobalIPv6Address);
+        tunInbound.settings.gateway.Should().HaveCount(enableIPv6Address ? 2 : 1);
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void GenerateClientConfigContent_TunRouteExcludesRespectHostIPv6Availability(bool hasGlobalIPv6Address)
+    {
+        var config = CoreConfigTestFactory.CreateConfigWithTunRouteExcludeAddress(ECoreType.Xray);
+        config.TunModeItem.EnableIPv6Address = false;
+        CoreConfigTestFactory.BindAppManagerConfig(config);
+
+        var node = CoreConfigTestFactory.CreateVmessNode(ECoreType.Xray, "n-main", "main");
+        var context = CoreConfigTestFactory.CreateContext(config, node, ECoreType.Xray, hasGlobalIPv6Address);
+        var result = new CoreConfigV2rayService(context).GenerateClientConfigContent();
+
+        result.Success.Should().BeTrue();
+        var cfg = JsonUtils.Deserialize<V2rayConfig>(result.Data!.ToString())!;
+        var routes = cfg.inbounds.First(i => i.protocol == "tun").settings.autoSystemRoutingTable!;
+
+        routes.Should().Contain(x => x.StartsWith("10."));
+        routes.Any(x => x.Contains(':')).Should().Be(hasGlobalIPv6Address);
+    }
+
+    [Fact]
+    public void GenerateClientConfigContent_XrayTlsOmitsAllowInsecureAndKeepsCertificatePin()
+    {
+        var config = CoreConfigTestFactory.CreateConfig(ECoreType.Xray);
+        CoreConfigTestFactory.BindAppManagerConfig(config);
+        var node = CoreConfigTestFactory.CreateVmessNode(ECoreType.Xray, "n-main", "main");
+        node.StreamSecurity = Global.StreamSecurity;
+        node.AllowInsecure = Global.StringTrue;
+        node.CertSha = "AA:BB:CC";
+        var context = CoreConfigTestFactory.CreateContext(config, node, ECoreType.Xray);
+
+        var result = new CoreConfigV2rayService(context).GenerateClientConfigContent();
+
+        result.Success.Should().BeTrue();
+        var json = result.Data!.ToString();
+        json.Should().NotContain("allowInsecure");
+        json.Should().Contain("pinnedPeerCertSha256");
+        json.Should().Contain("AA:BB:CC");
+    }
 }

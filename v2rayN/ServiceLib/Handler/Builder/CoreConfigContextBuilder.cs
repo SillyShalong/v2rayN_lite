@@ -49,6 +49,7 @@ public class CoreConfigContextBuilder
             RoutingItem = await ConfigHandler.GetDefaultRouting(config),
             IsWindows = Utils.IsWindows(),
             IsMacOS = Utils.IsMacOS(),
+            HasGlobalIPv6Address = Utils.HasGlobalIPv6Address(),
         };
         var validatorResult = NodeValidatorResult.Empty();
         var (actNode, nodeValidatorResult) = await ResolveNodeAsync(context, node);

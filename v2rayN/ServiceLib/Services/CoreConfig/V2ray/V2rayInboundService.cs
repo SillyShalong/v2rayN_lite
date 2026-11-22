@@ -66,8 +66,10 @@ public partial class CoreConfigV2rayService
                 if (!_config.TunModeItem.EnableIPv6Address)
                 {
                     tunInbound.settings.gateway = ["172.18.0.1/30"];
-                    tunInbound.settings.autoSystemRoutingTable = ["0.0.0.0/0"];
                 }
+                tunInbound.settings.autoSystemRoutingTable = context.HasGlobalIPv6Address
+                    ? ["0.0.0.0/0", "::/0"]
+                    : ["0.0.0.0/0"];
                 var bindInterface = _config.CoreBasicItem.BindInterface?.TrimEx();
                 if (!bindInterface.IsNullOrEmpty())
                 {
@@ -84,7 +86,9 @@ public partial class CoreConfigV2rayService
                         .Where(x => x != null).ToList();
 
                     var includeList = new List<IPNetwork2> { wholeInternet };
-                    var includeListV6 = new List<IPNetwork2> { wholeInternetV6 };
+                    var includeListV6 = context.HasGlobalIPv6Address
+                        ? new List<IPNetwork2> { wholeInternetV6 }
+                        : new List<IPNetwork2>();
 
                     foreach (var exclude in excludeList)
                     {
@@ -108,17 +112,13 @@ public partial class CoreConfigV2rayService
                     }
 
                     includeList = IPNetwork2.Supernet(includeList.ToArray()).ToList();
-                    includeListV6 = IPNetwork2.Supernet(includeListV6.ToArray()).ToList();
+                    if (includeListV6.Count > 0)
+                    {
+                        includeListV6 = IPNetwork2.Supernet(includeListV6.ToArray()).ToList();
+                    }
 
-                    if (_config.TunModeItem.EnableIPv6Address)
-                    {
-                        tunInbound.settings.autoSystemRoutingTable = includeList.Select(x => x.ToString())
-                            .Concat(includeListV6.Select(x => x.ToString())).ToList();
-                    }
-                    else
-                    {
-                        tunInbound.settings.autoSystemRoutingTable = includeList.Select(x => x.ToString()).ToList();
-                    }
+                    tunInbound.settings.autoSystemRoutingTable = includeList.Select(x => x.ToString())
+                        .Concat(includeListV6.Select(x => x.ToString())).ToList();
                 }
 
                 _coreConfig.inbounds.Add(tunInbound);

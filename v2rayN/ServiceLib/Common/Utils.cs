@@ -720,6 +720,61 @@ public class Utils
         return false;
     }
 
+    /// <summary>
+    /// Checks filters with a bounded regex timeout. Invalid or pathological filters fail open
+    /// so subscription nodes and log messages are not silently discarded.
+    /// </summary>
+    public static bool IsRegexMatch(string? input, string? pattern, int timeoutSeconds = 2)
+    {
+        if (pattern.IsNullOrEmpty())
+        {
+            return true;
+        }
+        if (input.IsNullOrEmpty())
+        {
+            return false;
+        }
+
+        try
+        {
+            return Regex.IsMatch(input, pattern, RegexOptions.None,
+                TimeSpan.FromSeconds(Math.Max(1, timeoutSeconds)));
+        }
+        catch (RegexMatchTimeoutException ex)
+        {
+            Logging.SaveLog("Regex filter timed out", ex);
+            return true;
+        }
+        catch (ArgumentException ex)
+        {
+            Logging.SaveLog("Invalid regex filter", ex);
+            return true;
+        }
+    }
+
+    public static bool HasGlobalIPv6Address()
+    {
+        try
+        {
+            return NetworkInterface.GetAllNetworkInterfaces()
+                .Where(ni => ni.OperationalStatus == OperationalStatus.Up
+                             && ni.NetworkInterfaceType != NetworkInterfaceType.Loopback)
+                .SelectMany(ni => ni.GetIPProperties().UnicastAddresses)
+                .Any(address => IsGlobalUnicastIPv6(address.Address));
+        }
+        catch
+        {
+            // If detection fails, keep IPv6 routed through the tunnel rather than risk a leak.
+            return true;
+        }
+    }
+
+    private static bool IsGlobalUnicastIPv6(IPAddress address)
+    {
+        return address.AddressFamily == AddressFamily.InterNetworkV6
+               && (address.GetAddressBytes()[0] & 0xE0) == 0x20;
+    }
+
     #endregion Data Checks
 
     #region Speed Test
