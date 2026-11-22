@@ -592,8 +592,6 @@ public class CoreConfigSingboxServiceTests
         proxy.realm.stun_servers.Should().Contain("turn.cloudflare.com:3478");
         proxy.server.Should().BeNull();
     }
-<<<<<<< HEAD
-=======
 
     [Fact]
     public void GenerateClientConfigContent_TunSystemStackWithIpv6_ShouldUsePrefixWithPeerAddress()
@@ -695,5 +693,4 @@ public class CoreConfigSingboxServiceTests
                 $"traffic to the TUN's own address '{address}' must be rejected, not routed");
         }
     }
->>>>>>> e1e6c5dd (Fix infinite TUN routing loop on traffic to the TUN's own addresses (#9897))
 }

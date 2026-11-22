@@ -168,23 +168,7 @@ public class Hysteria2Fmt : BaseFmt
     {
         if (item.CertSha.IsNullOrEmpty())
         {
-<<<<<<< HEAD
             item.CertSha = GetQueryDecoded(query, "pinSHA256");
-=======
-            var pinSHA256 = GetQueryDecoded(query, "pinSHA256");
-            item.CertSha = pinSHA256;
-            if (!pinSHA256.IsNullOrEmpty())
-            {
-                // NOTE:
-                // To accommodate Xray changes,
-                // some providers issue self-signed cert links with `insecure = false` and a certificate fingerprint,
-                // breaking interoperability between Xray, official Hysteria 2 client, and sing-box.
-                // Since this won't compromise the overall security model,
-                // `insecure = true` is automatically set when a fingerprint is detected,
-                // and the value is restored when generating configurations.
-                item.AllowInsecure = Global.StringTrue;
-            }
->>>>>>> 11bd52b6 (Fix (#9987))
         }
         item.SetProtocolExtra(item.GetProtocolExtra() with
         {
@@ -224,8 +208,6 @@ public class Hysteria2Fmt : BaseFmt
             var sha = item.CertSha;
             dicQuery.Add("pinSHA256", Utils.UrlEncode(sha));
         }
-<<<<<<< HEAD
-=======
         else if (!item.Cert.IsNullOrEmpty()
             && CertPemManager.GetLeafCertSha256Thumbprint(item.Cert) is { Length: > 0 } thumbprint)
         {
@@ -235,7 +217,6 @@ public class Hysteria2Fmt : BaseFmt
         {
             dicQuery.Add("ech", Utils.UrlEncode(item.EchConfigList));
         }
->>>>>>> 0a2f3e4f (Fix hy2 fmt (#10044))
         var protocolExtraItem = item.GetProtocolExtra();
         var isGecko = !protocolExtraItem.GeckoMinPacketSize.IsNullOrEmpty() || !protocolExtraItem.GeckoMaxPacketSize.IsNullOrEmpty();
         if (!protocolExtraItem.SalamanderPass.IsNullOrEmpty())

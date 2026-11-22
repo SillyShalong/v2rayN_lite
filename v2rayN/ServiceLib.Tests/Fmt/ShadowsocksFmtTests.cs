@@ -1,13 +1,16 @@
+using AwesomeAssertions;
+using Xunit;
+
 namespace ServiceLib.Tests.Fmt;
 
 public class ShadowsocksFmtTests
 {
-    [Test]
-    [Arguments("8388", true)]
-    [Arguments("\"8388\"", true)]
-    [Arguments("8388", false)]
-    [Arguments("\"8388\"", false)]
-    public async Task ResolveSip008_ObjectAndArrayDocuments_ShouldPreserveServerFields(string port, bool useObject)
+    [Theory]
+    [InlineData("8388", true)]
+    [InlineData("\"8388\"", true)]
+    [InlineData("8388", false)]
+    [InlineData("\"8388\"", false)]
+    public void ResolveSip008_ObjectAndArrayDocuments_ShouldPreserveServerFields(string port, bool useObject)
     {
         var server = $$"""
             {
@@ -25,27 +28,27 @@ public class ShadowsocksFmtTests
 
         var resolved = ShadowsocksFmt.ResolveSip008(document);
 
-        await resolved.Should().NotBeNull();
-        await resolved!.Should().HaveCount(1);
-        await resolved[0].Remarks.Should().BeEqualTo("SIP008 server");
-        await resolved[0].Address.Should().BeEqualTo("example.com");
-        await resolved[0].Port.Should().BeEqualTo(8388);
-        await resolved[0].Password.Should().BeEqualTo("example");
-        await resolved[0].GetProtocolExtra().SsMethod.Should().BeEqualTo("chacha20-ietf-poly1305");
+        resolved.Should().NotBeNull();
+        resolved!.Should().HaveCount(1);
+        resolved[0].Remarks.Should().Be("SIP008 server");
+        resolved[0].Address.Should().Be("example.com");
+        resolved[0].Port.Should().Be(8388);
+        resolved[0].Password.Should().Be("example");
+        resolved[0].GetProtocolExtra().SsMethod.Should().Be("chacha20-ietf-poly1305");
     }
 
     // SIP002 user info that is not base64 is "method:password", percent-encoded once.
-    [Test]
-    [Arguments("ss://2022-blake3-aes-128-gcm:p%2541ss@1.2.3.4:8388#demo", "p%41ss")]
-    [Arguments("ss://2022-blake3-aes-128-gcm:p%25ss@1.2.3.4:8388#demo", "p%ss")]
-    [Arguments("ss://2022-blake3-aes-128-gcm:a%3Ab%2Fc%2B%3D@1.2.3.4:8388#demo", "a:b/c+=")]
-    public async Task ResolveConfig_PlainUserInfo_ShouldDecodePasswordOnce(string shareUri, string password)
+    [Theory]
+    [InlineData("ss://2022-blake3-aes-128-gcm:p%2541ss@1.2.3.4:8388#demo", "p%41ss")]
+    [InlineData("ss://2022-blake3-aes-128-gcm:p%25ss@1.2.3.4:8388#demo", "p%ss")]
+    [InlineData("ss://2022-blake3-aes-128-gcm:a%3Ab%2Fc%2B%3D@1.2.3.4:8388#demo", "a:b/c+=")]
+    public void ResolveConfig_PlainUserInfo_ShouldDecodePasswordOnce(string shareUri, string password)
     {
         var resolved = FmtHandler.ResolveConfig(shareUri, out var msg);
 
-        await resolved.Should().NotBeNull().Because($"uri: {shareUri}, msg: {msg}");
-        await resolved!.ConfigType.Should().BeEqualTo(EConfigType.Shadowsocks);
-        await resolved.GetProtocolExtra().SsMethod.Should().BeEqualTo("2022-blake3-aes-128-gcm");
-        await resolved.Password.Should().BeEqualTo(password);
+        resolved.Should().NotBeNull(because: $"uri: {shareUri}, msg: {msg}");
+        resolved!.ConfigType.Should().Be(EConfigType.Shadowsocks);
+        resolved.GetProtocolExtra().SsMethod.Should().Be("2022-blake3-aes-128-gcm");
+        resolved.Password.Should().Be(password);
     }
 }

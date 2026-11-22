@@ -450,8 +450,6 @@ public class CertPemManager
             return string.Empty;
         }
     }
-<<<<<<< HEAD
-=======
 
     public static string GetLeafCertSha256Thumbprint(string pemCertChain, bool includeColon = false)
     {
@@ -484,50 +482,4 @@ public class CertPemManager
         return string.Empty;
     }
 
-    private static readonly Lazy<X509Certificate2Collection> _chromeRootCerts = new(() =>
-    {
-        var pemText = EmbedUtils.GetEmbedText(Global.ChromeRootCertFileName);
-        var collection = new X509Certificate2Collection();
-        collection.ImportFromPem(pemText);
-        return collection;
-    });
-
-    private static readonly Lazy<X509Certificate2Collection> _mozillaRootCerts = new(() =>
-    {
-        var pemText = EmbedUtils.GetEmbedText(Global.MozillaRootCertFileName);
-        var collection = new X509Certificate2Collection();
-        collection.ImportFromPem(pemText);
-        return collection;
-    });
-
-    private X509Certificate2Collection BuildTrustedCertificateCollection()
-    {
-        if (_config.GuiItem.RootCertProvider == Global.ChromeRootProvider)
-        {
-            return _chromeRootCerts.Value;
-        }
-        return _mozillaRootCerts.Value;
-    }
-
-    private bool IsSystemRootCertProvider()
-    {
-        return _config.GuiItem.RootCertProvider != Global.ChromeRootProvider && _config.GuiItem.RootCertProvider != Global.MozillaRootProvider;
-    }
-
-    public X509ChainPolicy? BuildCertificateChainPolicy()
-    {
-        if (IsSystemRootCertProvider())
-        {
-            return null;
-        }
-        var trustedCerts = BuildTrustedCertificateCollection();
-        var chainPolicy = new X509ChainPolicy
-        {
-            TrustMode = X509ChainTrustMode.CustomRootTrust,
-            RevocationMode = X509RevocationMode.NoCheck,
-        };
-        chainPolicy.CustomTrustStore.AddRange(trustedCerts);
-        return chainPolicy;
-    }
->>>>>>> 0a2f3e4f (Fix hy2 fmt (#10044))
 }

@@ -110,8 +110,6 @@ public partial class CoreConfigV2rayService
         }
     }
 
-<<<<<<< HEAD
-=======
     private static bool IsDnsRoutingCatchAll(RulesItem4Ray rule)
     {
         return (rule.outboundTag == Global.ProxyTag || rule.balancerTag == Global.ProxyTag + Global.BalancerTagSuffix)
@@ -124,45 +122,6 @@ public partial class CoreConfigV2rayService
             && rule.network is null or "tcp,udp" or "udp,tcp";
     }
 
-    private void GenFakeDns()
-    {
-        var fakeipRange = _config.SimpleDNSItem.FakeIPRange.IsNullOrEmpty() ? Global.FakeIPRanges.First() : _config.SimpleDNSItem.FakeIPRange;
-        var poolSize = 65535L;
-        try
-        {
-            var fakeipNetwork = IPNetwork2.Parse(fakeipRange);
-            var totalIPs = fakeipNetwork.Total;
-            // see https://github.com/XTLS/Xray-core/blob/6e3322d219140a025285ded1114fe17a5edb74d8/app/dns/fakedns/fake.go#L88
-            // if math.Log2(float64(lruSize)) >= float64(rooms) { return errors.New("LRU size is bigger than subnet size").AtError() }
-            totalIPs -= 1;
-            if (totalIPs > 0)
-            {
-                poolSize = (totalIPs >= long.MaxValue) ? long.MaxValue : (long)totalIPs;
-            }
-        }
-        catch
-        {
-            // Ignore
-        }
-        var fakeDns = new FakeDns4Ray
-        {
-            ipPool = fakeipRange,
-            poolSize = poolSize,
-        };
-        _coreConfig.fakedns = JsonUtils.SerializeToNode(fakeDns);
-        if (_config.SimpleDNSItem.FakeIPv6 == true && _config.SimpleDNSItem.BlockAAAAQuery != true)
-        {
-            if (!FakeIPUtils.TryParseIPv6Range(_config.SimpleDNSItem.FakeIPv6Range, out var range6, out var poolSize6))
-            {
-                throw new ArgumentException("Invalid IPv6 FakeIP range.");
-            }
-            _coreConfig.fakedns = new JsonArray(
-                _coreConfig.fakedns,
-                JsonUtils.SerializeToNode(new FakeDns4Ray { ipPool = range6, poolSize = poolSize6 }));
-        }
-    }
-
->>>>>>> 9f599c60 (fix(xray): keep direct DNS ahead of catch-all proxy rules (#10599))
     private void FillDnsServers(Dns4Ray dnsItem)
     {
         var simpleDNSItem = context.SimpleDnsItem;
@@ -283,8 +242,6 @@ public partial class CoreConfigV2rayService
 
         var directDnsTagIndex = 1;
 
-<<<<<<< HEAD
-=======
         if (dnsServerDomains.Count > 0)
         {
             AddDnsServers(bootstrapDNSAddress, dnsServerDomains);
@@ -294,24 +251,7 @@ public partial class CoreConfigV2rayService
             AddDnsServers(directDNSAddress, context.ProtectDomainList, true);
         }
 
-        if (simpleDNSItem.FakeIP == true)
-        {
-            var fakeIPMatchDomain = new HashSet<string>(proxyDomainList);
-            fakeIPMatchDomain.UnionWith(proxyGeositeList);
-            if (simpleDNSItem.GlobalFakeIp != false)
-            {
-                fakeIPMatchDomain.UnionWith(directDomainList);
-                fakeIPMatchDomain.UnionWith(directGeositeList);
-                fakeIPMatchDomain.UnionWith(expectedDomainList);
-            }
-            if (fakeIPMatchDomain.Count > 0)
-            {
-                GenFakeDns();
-                AddDnsServers(["fakedns"], fakeIPMatchDomain);
-            }
-        }
 
->>>>>>> e50c0a91 (Fix (#10035))
         AddDnsServers(remoteDNSAddress, proxyDomainList);
         AddDnsServers(directDNSAddress, directDomainList, true);
         AddDnsServers(remoteDNSAddress, proxyGeositeList);
@@ -399,17 +339,13 @@ public partial class CoreConfigV2rayService
                 {
                     dnsServer.tag = $"{Global.DirectDnsTag}-{directDnsTagIndex++}";
                 }
-<<<<<<< HEAD
-                var dnsServerNode = JsonUtils.SerializeToNode(dnsServer,
-                    new JsonSerializerOptions { DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull });
-=======
                 if (expectedIPs is not null
                     && i == expectedIPs.Count - 1)
                 {
                     dnsServer.finalQuery = true;
                 }
-                var dnsServerNode = JsonUtils.SerializeToNode(dnsServer);
->>>>>>> 0856ffd7 (Try fix dns (#10485))
+                var dnsServerNode = JsonUtils.SerializeToNode(dnsServer,
+                    new JsonSerializerOptions { DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull });
                 dnsItem.servers.Add(dnsServerNode);
             }
         }

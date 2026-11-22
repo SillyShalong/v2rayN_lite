@@ -89,26 +89,6 @@ public class WireguardFmt : BaseFmt
         {
             dicQuery.Add("mtu", protoExtra.WgMtu.ToString());
         }
-<<<<<<< HEAD
-=======
-        if (!protoExtra.WgDns.IsNullOrEmpty())
-        {
-            dicQuery.Add("dns", Utils.UrlEncode(protoExtra.WgDns));
-        }
-        if (item.Finalmask.IsNotEmpty())
-        {
-            var node = JsonUtils.ParseJson(item.Finalmask);
-            var finalmask = node != null
-                ? JsonUtils.Serialize(node, new JsonSerializerOptions
-                {
-                    WriteIndented = false,
-                    DefaultIgnoreCondition = JsonIgnoreCondition.Never,
-                    Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping
-                })
-                : item.Finalmask;
-            dicQuery.Add("fm", Utils.UrlEncode(finalmask));
-        }
->>>>>>> be3566df (Add finalMask parsing to Wireguard configuration handling (#10201))
         return ToUri(EConfigType.WireGuard, item.Address, item.Port, item.Password, dicQuery, remark);
     }
 
