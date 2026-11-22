@@ -564,6 +564,15 @@
   <data name="LvUserAgent" xml:space="preserve">
     <value>User Agent</value>
   </data>
+  <data name="LvCustomClientVersion" xml:space="preserve">
+    <value>v2rayN version</value>
+  </data>
+  <data name="LvCustomCoreVersion" xml:space="preserve">
+    <value>Xray version</value>
+  </data>
+  <data name="LvCustomVersionTip" xml:space="preserve">
+    <value>Customize the version numbers in the subscription User-Agent, e.g. v2rayN/6.55 (xray/24.11.30). Leave blank to use the real version; a non-empty User Agent takes precedence</value>
+  </data>
   <data name="TbCancel" xml:space="preserve">
     <value>Cancel</value>
   </data>
@@ -1774,7 +1783,7 @@ The "Get Certificate" action may fail if a self-signed certificate is used or if
     <value>New Update</value>
   </data>
   <data name="MsgAllowInsecureDeprecated" xml:space="preserve">
-    <value>Warning: Xray will disable allowInsecure (skip certificate verification) in August 2026. Please switch to pinnedPeerCertSha256 (fixed certificate fingerprint) as soon as possible. allowInsecure will not be usable after its expiration.</value>
+    <value>Xray no longer supports skipping TLS certificate verification. Configure trusted certificates or pin the peer certificate fingerprint.</value>
   </data>
   <data name="TbRouteExcludeAddress" xml:space="preserve">
     <value>Route Exclude Address</value>

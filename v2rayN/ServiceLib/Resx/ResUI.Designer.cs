@@ -662,6 +662,33 @@ namespace ServiceLib.Resx {
                 return ResourceManager.GetString("LvUserAgent", resourceCulture);
             }
         }
+
+        /// <summary>
+        ///   查找类似 v2rayN version 的本地化字符串。
+        /// </summary>
+        public static string LvCustomClientVersion {
+            get {
+                return ResourceManager.GetString("LvCustomClientVersion", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   查找类似 Xray version 的本地化字符串。
+        /// </summary>
+        public static string LvCustomCoreVersion {
+            get {
+                return ResourceManager.GetString("LvCustomCoreVersion", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   查找类似 Customize the version numbers in the subscription User-Agent 的本地化字符串。
+        /// </summary>
+        public static string LvCustomVersionTip {
+            get {
+                return ResourceManager.GetString("LvCustomVersionTip", resourceCulture);
+            }
+        }
         
         /// <summary>
         ///   查找类似 WebDAV Check 的本地化字符串。
@@ -1924,7 +1951,7 @@ namespace ServiceLib.Resx {
         }
         
         /// <summary>
-        ///   查找类似 Warning: Xray will disable allowInsecure (skip certificate verification) in August 2026. Please switch to pinnedPeerCertSha256 (fixed certificate fingerprint) as soon as possible. allowInsecure will not be usable after its expiration. 的本地化字符串。
+        ///   查找类似 Xray no longer supports skipping TLS certificate verification. Configure trusted certificates or pin the peer certificate fingerprint. 的本地化字符串。
         /// </summary>
         public static string MsgAllowInsecureDeprecated {
             get {

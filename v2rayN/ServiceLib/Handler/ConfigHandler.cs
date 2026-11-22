@@ -1475,7 +1475,7 @@ public static class ConfigHandler
                     p != null &&
                     p.IsValid() &&
                     !p.ConfigType.IsComplexType() &&
-                    (extraItem.Filter.IsNullOrEmpty() || Regex.IsMatch(p.Remarks, extraItem.Filter))
+                    Utils.IsRegexMatch(p.Remarks, extraItem.Filter)
                 )
                 .ToList() ?? [];
             if (matchedChildProfiles.Count == 0)
@@ -1613,7 +1613,7 @@ public static class ConfigHandler
             //exist sub items //filter
             if (isSub && subid.IsNotEmpty() && subFilter.IsNotEmpty())
             {
-                if (!Regex.IsMatch(profileItem.Remarks, subFilter))
+                if (!Utils.IsRegexMatch(profileItem.Remarks, subFilter))
                 {
                     continue;
                 }
@@ -2024,6 +2024,8 @@ public static class ConfigHandler
             item.Enabled = subItem.Enabled;
             item.AutoUpdateInterval = 0;
             item.UserAgent = subItem.UserAgent;
+            item.CustomClientVersion = subItem.CustomClientVersion;
+            item.CustomCoreVersion = subItem.CustomCoreVersion;
             item.Sort = subItem.Sort;
             item.Filter = subItem.Filter;
             item.UpdateTime = subItem.UpdateTime;

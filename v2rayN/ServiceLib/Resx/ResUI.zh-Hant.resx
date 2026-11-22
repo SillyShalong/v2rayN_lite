@@ -564,6 +564,15 @@
   <data name="LvUserAgent" xml:space="preserve">
     <value>User Agent (可選)</value>
   </data>
+  <data name="LvCustomClientVersion" xml:space="preserve">
+    <value>v2rayN 版本號 (可選)</value>
+  </data>
+  <data name="LvCustomCoreVersion" xml:space="preserve">
+    <value>Xray 版本號 (可選)</value>
+  </data>
+  <data name="LvCustomVersionTip" xml:space="preserve">
+    <value>自訂訂閱請求 User-Agent 中的版本號，如 v2rayN/6.55 (xray/24.11.30)；留空使用真實版本；User Agent 非空時優先</value>
+  </data>
   <data name="TbCancel" xml:space="preserve">
     <value>取消</value>
   </data>
@@ -1768,7 +1777,7 @@
     <value>有更新</value>
   </data>
   <data name="MsgAllowInsecureDeprecated" xml:space="preserve">
-    <value>警告：Xray 將在 2026.8.1 停用跳過憑證驗證 allowInsecure ，請盡快改用憑證固定指紋 pinnedPeerCertSha256。到期後無法使用 allowInsecure。</value>
+    <value>Xray 已不再支援略過 TLS 憑證驗證。請設定受信任憑證或固定對端憑證指紋。</value>
   </data>
   <data name="TbVerifyPeerCertByName" xml:space="preserve">
     <value>Verify Peer Cert By Name</value>

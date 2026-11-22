@@ -84,13 +84,44 @@ public static class SubscriptionHandler
     {
         var downloadHandle = new DownloadService()
         {
-            ExternalUrlValidator = ExternalConnectionGuard.IsSubscriptionUrlAllowed
+            ExternalUrlValidator = ExternalConnectionGuard.IsSubscriptionUrlAllowed,
+            AcceptHeader = "*/*"
         };
         downloadHandle.Error += (sender2, args) =>
         {
             updateFunc?.Invoke(false, $"{hashCode}{args.GetException().Message}");
         };
         return downloadHandle;
+    }
+
+    /// <summary>
+    /// Build the User-Agent for subscription requests (custom User-Agent takes precedence, then custom versions, then empty for the default)
+    /// </summary>
+    public static string BuildUserAgent(SubItem item)
+    {
+        var userAgent = item.UserAgent.TrimEx();
+        if (userAgent.IsNotEmpty())
+        {
+            return userAgent;
+        }
+
+        var clientVersion = item.CustomClientVersion.TrimEx();
+        var coreVersion = item.CustomCoreVersion.TrimEx();
+        if (clientVersion.IsNullOrEmpty() && coreVersion.IsNullOrEmpty())
+        {
+            return string.Empty;
+        }
+
+        if (clientVersion.IsNullOrEmpty())
+        {
+            clientVersion = Utils.GetVersionInfo();
+        }
+        userAgent = $"{Global.AppName}/{clientVersion}";
+        if (coreVersion.IsNotEmpty())
+        {
+            userAgent += $" (xray/{coreVersion})";
+        }
+        return userAgent;
     }
 
     private static async Task<string> DownloadSubscriptionContent(DownloadService downloadHandle, string url, bool blProxy, string userAgent)
@@ -146,7 +177,7 @@ public static class SubscriptionHandler
         }
 
         // Download and return result directly
-        return await DownloadSubscriptionContent(downloadHandle, url, blProxy, item.UserAgent);
+        return await DownloadSubscriptionContent(downloadHandle, url, blProxy, BuildUserAgent(item));
     }
 
     private static async Task<string> DownloadAdditionalSubscriptions(SubItem item, string mainResult, bool blProxy, DownloadService downloadHandle)
@@ -169,7 +200,7 @@ public static class SubscriptionHandler
                 continue;
             }
 
-            var additionalResult = await DownloadSubscriptionContent(downloadHandle, url2, blProxy, item.UserAgent);
+            var additionalResult = await DownloadSubscriptionContent(downloadHandle, url2, blProxy, BuildUserAgent(item));
 
             if (additionalResult.IsNotEmpty())
             {

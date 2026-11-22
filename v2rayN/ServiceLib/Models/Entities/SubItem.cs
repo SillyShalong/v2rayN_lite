@@ -16,6 +16,10 @@ public class SubItem
 
     public string UserAgent { get; set; } = string.Empty;
 
+    public string CustomClientVersion { get; set; } = string.Empty;
+
+    public string CustomCoreVersion { get; set; } = string.Empty;
+
     public int Sort { get; set; }
 
     public string? Filter { get; set; }
